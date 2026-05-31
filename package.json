@@ -7,9 +7,13 @@
     "dev": "vite dev",
     "build": "vite build",
     "build:dev": "vite build --mode development",
+    "build:mobile": "vite build --config vite.config.mobile.ts",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "cap:sync": "bun run build:mobile && cap sync",
+    "cap:ios": "bun run cap:sync && cap open ios",
+    "cap:android": "bun run cap:sync && cap open android"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.4",

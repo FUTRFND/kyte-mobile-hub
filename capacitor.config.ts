@@ -1,16 +1,12 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
+// Capacitor packages the static SPA bundle from `dist/` (produced by
+// `bun run build:mobile`). No `server.url` — the app runs fully offline-capable
+// on-device and talks to Lovable Cloud (Supabase) over HTTPS directly.
 const config: CapacitorConfig = {
   appId: "app.lovable.kyte.mobile",
   appName: "Kyte",
-  webDir: ".output/public",
-  // Hot-reload from the Lovable sandbox preview during development.
-  // Replace `cleartext` with `false` and remove `server.url` before
-  // building a production .ipa / .apk.
-  server: {
-    url: "https://id-preview--4d02cc2d-7149-4dbd-b575-87e8c389e0b5.lovable.app",
-    cleartext: true,
-  },
+  webDir: "dist",
   backgroundColor: "#0B0B0D",
   plugins: {
     SplashScreen: {
