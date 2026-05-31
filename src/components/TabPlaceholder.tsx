@@ -1,4 +1,5 @@
-import type { ComponentType, ReactNode } from "react";
+import type { ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
 
 export function TabPlaceholder({
   title,
@@ -8,7 +9,7 @@ export function TabPlaceholder({
 }: {
   title: string;
   subtitle: string;
-  icon: ComponentType<{ className?: string }>;
+  icon: LucideIcon;
   children?: ReactNode;
 }) {
   return (

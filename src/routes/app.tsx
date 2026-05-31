@@ -1,6 +1,5 @@
 import { createFileRoute, Outlet, Link, redirect } from "@tanstack/react-router";
-import { Home, CalendarDays, BarChart3, User2 } from "lucide-react";
-import type { ComponentType } from "react";
+import { Home, CalendarDays, BarChart3, User2, type LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/app")({
@@ -11,7 +10,7 @@ export const Route = createFileRoute("/app")({
   component: AppShell,
 });
 
-type Tab = { to: string; label: string; icon: ComponentType<{ className?: string }> };
+type Tab = { to: string; label: string; icon: LucideIcon };
 const tabs: Tab[] = [
   { to: "/app/home", label: "Home", icon: Home },
   { to: "/app/calendar", label: "Calendar", icon: CalendarDays },
