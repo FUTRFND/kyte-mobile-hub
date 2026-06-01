@@ -23,6 +23,7 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-glow: var(--primary-glow);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -31,45 +32,77 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-surface: var(--surface);
   --color-surface-elevated: var(--surface-elevated);
+
+  --animate-fade-in: fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-fade-in-up: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-shimmer: shimmer 2.4s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pulse-glow: pulse-glow 2.6s ease-in-out infinite;
 }
 
 :root {
   --radius: 0.875rem;
 
-  /* Kyte dark theme — default */
-  --background: hsl(240 7% 4%);              /* #0B0B0D */
+  /* Kyte premium dark theme */
+  --background: hsl(240 10% 3.5%);            /* near-black with cool tint */
   --foreground: hsl(0 0% 98%);
-  --surface: hsl(240 6% 8%);                 /* card-ish */
-  --surface-elevated: hsl(240 6% 12%);
+  --surface: hsl(240 8% 7%);
+  --surface-elevated: hsl(240 8% 11%);
 
-  --card: hsl(240 6% 8%);
+  --card: hsl(240 8% 7%);
   --card-foreground: hsl(0 0% 98%);
-  --popover: hsl(240 6% 10%);
+  --popover: hsl(240 8% 9%);
   --popover-foreground: hsl(0 0% 98%);
 
-  --primary: hsl(202 100% 50%);              /* electric blue */
-  --primary-foreground: hsl(240 7% 4%);
+  --primary: hsl(202 100% 55%);               /* electric blue */
+  --primary-glow: hsl(190 100% 65%);          /* cyan glow */
+  --primary-foreground: hsl(240 10% 4%);
 
-  --secondary: hsl(240 5% 14%);
+  --secondary: hsl(240 6% 14%);
   --secondary-foreground: hsl(0 0% 98%);
 
-  --muted: hsl(240 5% 12%);
+  --muted: hsl(240 6% 12%);
   --muted-foreground: hsl(240 5% 65%);
 
-  --accent: hsl(202 100% 50%);
-  --accent-foreground: hsl(240 7% 4%);
+  --accent: hsl(265 90% 65%);                 /* purple accent */
+  --accent-foreground: hsl(0 0% 98%);
 
-  --destructive: hsl(0 75% 58%);
+  --destructive: hsl(0 75% 60%);
   --destructive-foreground: hsl(0 0% 98%);
 
-  --border: hsl(240 5% 16%);
-  --input: hsl(240 5% 16%);
-  --ring: hsl(202 100% 50%);
+  --success: hsl(150 70% 50%);
+  --success-foreground: hsl(240 10% 4%);
+  --warning: hsl(38 95% 60%);
+
+  --border: hsl(240 6% 16%);
+  --input: hsl(240 6% 16%);
+  --ring: hsl(202 100% 55%);
+
+  /* Premium gradients */
+  --gradient-primary: linear-gradient(135deg, hsl(202 100% 55%), hsl(265 90% 65%));
+  --gradient-hero: linear-gradient(135deg, hsl(202 100% 55%) 0%, hsl(190 100% 65%) 50%, hsl(265 90% 65%) 100%);
+  --gradient-surface: linear-gradient(160deg, hsl(240 8% 11%) 0%, hsl(240 8% 7%) 100%);
+  --gradient-success: linear-gradient(135deg, hsl(150 70% 50%), hsl(170 70% 50%));
+  --gradient-mesh:
+    radial-gradient(at 0% 0%, hsl(202 100% 55% / 0.18) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, hsl(265 90% 65% / 0.15) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, hsl(190 100% 65% / 0.10) 0px, transparent 60%);
+
+  /* Premium shadows */
+  --shadow-glow: 0 10px 40px -10px hsl(202 100% 55% / 0.45), 0 0 0 1px hsl(202 100% 55% / 0.10);
+  --shadow-accent-glow: 0 10px 40px -10px hsl(265 90% 65% / 0.45);
+  --shadow-elegant: 0 20px 50px -20px hsl(240 10% 0% / 0.6);
+  --shadow-card: 0 1px 0 0 hsl(0 0% 100% / 0.04) inset, 0 1px 2px 0 hsl(0 0% 0% / 0.4);
+
+  --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @layer base {
@@ -90,7 +123,88 @@
     letter-spacing: -0.02em;
   }
 
-  /* Safe-area utility for Capacitor */
   .safe-top { padding-top: env(safe-area-inset-top); }
   .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 }
+
+@layer utilities {
+  .bg-gradient-primary { background-image: var(--gradient-primary); }
+  .bg-gradient-hero { background-image: var(--gradient-hero); }
+  .bg-gradient-surface { background-image: var(--gradient-surface); }
+  .bg-gradient-success { background-image: var(--gradient-success); }
+  .bg-gradient-mesh { background-image: var(--gradient-mesh); }
+
+  .shadow-glow { box-shadow: var(--shadow-glow); }
+  .shadow-accent-glow { box-shadow: var(--shadow-accent-glow); }
+  .shadow-elegant { box-shadow: var(--shadow-elegant); }
+  .shadow-card { box-shadow: var(--shadow-card); }
+
+  .text-gradient-primary {
+    background-image: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .text-gradient-hero {
+    background-image: var(--gradient-hero);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .card-premium {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1.5rem;
+    background-image: var(--gradient-surface);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-card);
+  .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+}
+
+  .glow-ring::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: var(--gradient-hero);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.7;
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(202 100% 55% / 0.0); }
+  50% { box-shadow: 0 0 30px 6px hsl(202 100% 55% / 0.30); }
+}
+@keyframes slow-spin {
+  to { transform: rotate(360deg); }
+}
+
+.animate-fade-in { animation: fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-fade-in-up { animation: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-float { animation: float 6s ease-in-out infinite; }
+.animate-pulse-glow { animation: pulse-glow 2.6s ease-in-out infinite; }
+.animate-slow-spin { animation: slow-spin 30s linear infinite; }

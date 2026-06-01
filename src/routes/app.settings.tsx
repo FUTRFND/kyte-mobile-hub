@@ -31,6 +31,7 @@ import {
 } from "@/lib/kyte/notifications";
 import { downloadFile, toCSV } from "@/lib/kyte/export";
 import { buildMonthlyReport, downloadBlob, lastNMonths } from "@/lib/kyte/report";
+import { seedDemoData } from "@/lib/kyte/demoData";
 
 export const Route = createFileRoute("/app/settings")({
   head: () => ({ meta: [{ title: "Settings — Kyte" }] }),
@@ -181,6 +182,10 @@ function SettingsPage() {
         </button>
         <h1 className="font-display text-xl font-bold text-foreground">Settings</h1>
       </header>
+
+      <Section title="Demo data" icon={Sparkles}>
+        <DemoSeeder />
+      </Section>
 
       <Section title="Budget">
         <label className="block px-5 pb-3">
@@ -484,6 +489,45 @@ function DeleteConfirmModal({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function DemoSeeder() {
+  const qc = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState<null | { bills: number; transactions: number }>(null);
+  const run = async () => {
+    setBusy(true);
+    try {
+      const out = await seedDemoData();
+      setDone({ bills: out.bills, transactions: out.transactions });
+      qc.invalidateQueries();
+    } catch (e) {
+      alert((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="px-5 py-4">
+      <p className="text-xs text-muted-foreground">
+        Populate realistic bills, income, and transactions so every screen looks alive. Your linked
+        Teller accounts stay untouched.
+      </p>
+      <button
+        onClick={run}
+        disabled={busy}
+        className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-primary text-sm font-semibold text-primary-foreground shadow-glow disabled:opacity-60"
+      >
+        <Sparkles className="h-4 w-4" />
+        {busy ? "Seeding…" : done ? "Re-seed demo data" : "Load demo data"}
+      </button>
+      {done && (
+        <p className="mt-2 text-[11px] text-success">
+          Loaded {done.bills} bills and {done.transactions} transactions. ✨
+        </p>
+      )}
     </div>
   );
 }
