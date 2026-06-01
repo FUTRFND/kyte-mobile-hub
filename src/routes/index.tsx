@@ -32,7 +32,7 @@ function Splash() {
   }, [hold, navigate]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background">
+    <main className="flex min-h-dvh items-center justify-center bg-background">
       <div className="flex flex-col items-center gap-4">
         <KyteMark />
         <span className="font-display text-2xl font-bold tracking-tight text-foreground">Kyte</span>

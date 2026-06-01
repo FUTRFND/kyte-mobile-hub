@@ -68,7 +68,7 @@ function Login() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col bg-background px-6 safe-top safe-bottom">
+    <main className="flex min-h-dvh flex-col bg-background px-6 safe-top safe-bottom">
       <div className="flex flex-1 flex-col justify-center">
         <div className="mb-8 flex flex-col items-center gap-3">
           <KyteMark size={52} />

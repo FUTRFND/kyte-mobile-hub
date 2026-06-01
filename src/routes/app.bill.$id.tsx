@@ -123,7 +123,7 @@ function BillDetail() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-dvh flex-col bg-background">
       <header className="flex items-center justify-between px-4 pt-4 pb-2">
         <button
           onClick={() => nav({ to: "/app/home" })}

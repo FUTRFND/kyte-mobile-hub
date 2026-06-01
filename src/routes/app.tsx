@@ -27,7 +27,7 @@ function AppShell() {
   }, []);
   return (
     <BiometricGate>
-      <div className="flex min-h-screen flex-col bg-background safe-top">
+      <div className="flex min-h-dvh flex-col bg-background safe-top">
         <main className="flex-1 pb-24">
           <Outlet />
         </main>

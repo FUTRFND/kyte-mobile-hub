@@ -38,7 +38,7 @@ function Onboarding() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col bg-background px-6 safe-top safe-bottom">
+    <main className="flex min-h-dvh flex-col bg-background px-6 safe-top safe-bottom">
       <div className="flex justify-end pt-4">
         <button onClick={finish} className="text-sm text-muted-foreground">Skip</button>
       </div>
