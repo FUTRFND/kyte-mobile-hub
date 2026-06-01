@@ -17,37 +17,64 @@ export type Database = {
       accounts: {
         Row: {
           access_token_encrypted: string | null
+          balance_available: number | null
+          balance_ledger: number | null
+          balances_refreshed_at: string | null
           created_at: string
+          currency: string | null
           id: string
           institution: string | null
           linked_at: string
           mask: string | null
+          name: string | null
           provider: string
           status: string
+          subtype: string | null
+          teller_account_id: string | null
+          teller_enrollment_id: string | null
+          type: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           access_token_encrypted?: string | null
+          balance_available?: number | null
+          balance_ledger?: number | null
+          balances_refreshed_at?: string | null
           created_at?: string
+          currency?: string | null
           id?: string
           institution?: string | null
           linked_at?: string
           mask?: string | null
+          name?: string | null
           provider?: string
           status?: string
+          subtype?: string | null
+          teller_account_id?: string | null
+          teller_enrollment_id?: string | null
+          type?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           access_token_encrypted?: string | null
+          balance_available?: number | null
+          balance_ledger?: number | null
+          balances_refreshed_at?: string | null
           created_at?: string
+          currency?: string | null
           id?: string
           institution?: string | null
           linked_at?: string
           mask?: string | null
+          name?: string | null
           provider?: string
           status?: string
+          subtype?: string | null
+          teller_account_id?: string | null
+          teller_enrollment_id?: string | null
+          type?: string | null
           updated_at?: string
           user_id?: string
         }
