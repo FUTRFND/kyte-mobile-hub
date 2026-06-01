@@ -11,6 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as InsightsRouteImport } from './routes/insights'
+import { Route as HomeRouteImport } from './routes/home'
+import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
@@ -31,6 +34,21 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InsightsRoute = InsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomeRoute = HomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CalendarRoute = CalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRoute = AppRouteImport.update({
@@ -92,6 +110,9 @@ const AppBillIdRoute = AppBillIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/calendar': typeof CalendarRoute
+  '/home': typeof HomeRoute
+  '/insights': typeof InsightsRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/app/accounts': typeof AppAccountsRoute
@@ -107,6 +128,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/calendar': typeof CalendarRoute
+  '/home': typeof HomeRoute
+  '/insights': typeof InsightsRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/app/accounts': typeof AppAccountsRoute
@@ -123,6 +147,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/calendar': typeof CalendarRoute
+  '/home': typeof HomeRoute
+  '/insights': typeof InsightsRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/app/accounts': typeof AppAccountsRoute
@@ -140,6 +167,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/app'
+    | '/calendar'
+    | '/home'
+    | '/insights'
     | '/login'
     | '/onboarding'
     | '/app/accounts'
@@ -155,6 +185,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/app'
+    | '/calendar'
+    | '/home'
+    | '/insights'
     | '/login'
     | '/onboarding'
     | '/app/accounts'
@@ -170,6 +203,9 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/app'
+    | '/calendar'
+    | '/home'
+    | '/insights'
     | '/login'
     | '/onboarding'
     | '/app/accounts'
@@ -186,6 +222,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
+  CalendarRoute: typeof CalendarRoute
+  HomeRoute: typeof HomeRoute
+  InsightsRoute: typeof InsightsRoute
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
 }
@@ -204,6 +243,27 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/insights': {
+      id: '/insights'
+      path: '/insights'
+      fullPath: '/insights'
+      preLoaderRoute: typeof InsightsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/home': {
+      id: '/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/calendar': {
+      id: '/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof CalendarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app': {
@@ -315,6 +375,9 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
+  CalendarRoute: CalendarRoute,
+  HomeRoute: HomeRoute,
+  InsightsRoute: InsightsRoute,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
 }
