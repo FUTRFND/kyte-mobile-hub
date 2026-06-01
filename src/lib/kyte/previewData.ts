@@ -269,6 +269,18 @@ export const previewTransactions: Transaction[] = [
   },
 ];
 
+const tellerExtras = {
+  teller_account_id: null,
+  teller_enrollment_id: null,
+  name: null,
+  type: null,
+  subtype: null,
+  currency: "USD",
+  balance_available: null,
+  balance_ledger: null,
+  balances_refreshed_at: null,
+};
+
 export const previewAccounts: Account[] = [
   {
     id: "account-checking",
@@ -281,6 +293,7 @@ export const previewAccounts: Account[] = [
     linked_at: stamp,
     created_at: stamp,
     updated_at: stamp,
+    ...tellerExtras,
   },
   {
     id: "account-card",
@@ -293,6 +306,7 @@ export const previewAccounts: Account[] = [
     linked_at: stamp,
     created_at: stamp,
     updated_at: stamp,
+    ...tellerExtras,
   },
 ];
 
