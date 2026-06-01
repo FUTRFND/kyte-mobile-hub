@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { LogOut, Check, Settings, History, Wallet, ChevronRight } from "lucide-react";
+import { LogOut, Check, Settings, History, Wallet, ChevronRight, Landmark } from "lucide-react";
 import { PageHeader } from "@/components/kyte/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { profileQuery } from "@/lib/kyte/queries";
@@ -110,6 +110,7 @@ function ProfileTab() {
         <div className="overflow-hidden rounded-2xl border border-border bg-surface-elevated">
           <NavLink to="/app/history" icon={History} label="Transaction history" />
           <NavLink to="/app/income" icon={Wallet} label="Income sources" />
+          <NavLink to="/app/accounts" icon={Landmark} label="Linked banks" />
           <NavLink to="/app/settings" icon={Settings} label="Settings & security" />
         </div>
       </section>
@@ -131,7 +132,7 @@ function NavLink({
   icon: Icon,
   label,
 }: {
-  to: "/app/history" | "/app/income" | "/app/settings";
+  to: "/app/history" | "/app/income" | "/app/accounts" | "/app/settings";
   icon: React.ComponentType<{ className?: string }>;
   label: string;
 }) {

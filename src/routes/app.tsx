@@ -1,7 +1,9 @@
 import { createFileRoute, Outlet, Link, redirect } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { Home, CalendarDays, BarChart3, User2, type LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { BiometricGate } from "@/components/kyte/BiometricGate";
+import { installOfflineQueue } from "@/lib/kyte/offlineQueue";
 
 export const Route = createFileRoute("/app")({
   beforeLoad: async () => {
@@ -20,6 +22,9 @@ const tabs: Tab[] = [
 ];
 
 function AppShell() {
+  useEffect(() => {
+    installOfflineQueue();
+  }, []);
   return (
     <BiometricGate>
       <div className="flex min-h-screen flex-col bg-background safe-top">

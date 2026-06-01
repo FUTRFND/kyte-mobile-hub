@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Trash2, Check, History } from "lucide-react";
+import { ArrowLeft, Trash2, Check, History, Clock, CreditCard } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { billsQuery, paymentsQuery, profileQuery } from "@/lib/kyte/queries";
@@ -13,6 +13,8 @@ import {
   toISODate,
 } from "@/lib/kyte/bills";
 import { BillFormSheet } from "@/components/kyte/BillFormSheet";
+import { verifyBiometric } from "@/lib/kyte/biometric";
+import { enqueueMarkPaid, flushPending } from "@/lib/kyte/offlineQueue";
 
 export const Route = createFileRoute("/app/bill/$id")({
   head: () => ({ meta: [{ title: "Bill — Kyte" }] }),
@@ -46,22 +48,49 @@ function BillDetail() {
   }
 
   const due = nextDue(bill);
-  const billPayments = payments.filter((p) => p.bill_id === bill.id);
+  const billPayments = payments.filter((p) => p.bill_id === bill.id).slice(0, 12);
   const dot = bill.color || CATEGORY_COLORS[bill.category] || "#0098FF";
 
   const markPaid = async () => {
     setBusy(true);
     const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
-    const { error } = await supabase.from("bill_payments").insert({
+    if (!u.user) {
+      setBusy(false);
+      return;
+    }
+    const entry = {
       user_id: u.user.id,
       bill_id: bill.id,
-      amount: bill.amount,
+      amount: Number(bill.amount),
       paid_on: toISODate(new Date()),
       period_date: toISODate(due),
-    });
+    };
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      await enqueueMarkPaid(entry);
+    } else {
+      const { error } = await supabase.from("bill_payments").insert(entry);
+      if (error) await enqueueMarkPaid(entry);
+    }
+    await flushPending();
     setBusy(false);
-    if (!error) qc.invalidateQueries({ queryKey: ["payments"] });
+    qc.invalidateQueries({ queryKey: ["payments"] });
+  };
+
+  const payNow = async () => {
+    if (profile?.pay_requires_biometric) {
+      const ok = await verifyBiometric(`Authorize payment for ${bill.name}`);
+      if (!ok) return;
+    }
+    alert(
+      `Pay Now\n\n${bill.name} — ${formatMoney(Number(bill.amount), currency)}\n\nWhen you connect a Teller account, this opens the issuer's payment link. For now you can log it with “Mark as paid”.`,
+    );
+  };
+
+  const snooze = async () => {
+    const next = new Date();
+    next.setDate(next.getDate() + 1);
+    await supabase.from("bills").update({ snoozed_until: toISODate(next) }).eq("id", bill.id);
+    qc.invalidateQueries({ queryKey: ["bills"] });
   };
 
   const remove = async () => {
@@ -105,16 +134,33 @@ function BillDetail() {
         <p className="mt-2 text-sm text-muted-foreground">
           Next due {due.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
         </p>
+        {bill.snoozed_until && (
+          <p className="mt-1 text-xs text-primary">Snoozed until {bill.snoozed_until}</p>
+        )}
       </section>
 
-      <div className="mt-8 px-5">
+      <div className="mt-8 grid grid-cols-1 gap-3 px-5">
         <button
-          disabled={busy}
-          onClick={markPaid}
-          className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-base font-semibold text-primary-foreground active:opacity-90 disabled:opacity-60"
+          onClick={payNow}
+          className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-base font-semibold text-primary-foreground active:opacity-90"
         >
-          <Check className="h-5 w-5" /> Mark as paid
+          <CreditCard className="h-5 w-5" /> Pay now
         </button>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            disabled={busy}
+            onClick={markPaid}
+            className="flex h-12 items-center justify-center gap-2 rounded-2xl border border-border bg-surface text-sm font-semibold text-foreground active:opacity-80 disabled:opacity-60"
+          >
+            <Check className="h-4 w-4" /> Mark as paid
+          </button>
+          <button
+            onClick={snooze}
+            className="flex h-12 items-center justify-center gap-2 rounded-2xl border border-border bg-surface text-sm font-semibold text-foreground active:opacity-80"
+          >
+            <Clock className="h-4 w-4" /> Snooze 1d
+          </button>
+        </div>
       </div>
 
       {bill.notes && (

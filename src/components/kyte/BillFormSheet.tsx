@@ -86,13 +86,20 @@ export function BillFormSheet({
     }
     qc.invalidateQueries({ queryKey: ["bills"] });
     if (saved) {
-      const { scheduleBillReminder } = await import("@/lib/kyte/notifications");
+      const { scheduleBillReminders, DEFAULT_PREFS } = await import("@/lib/kyte/notifications");
       const { data: prof } = await supabase
         .from("profiles")
-        .select("reminder_days_default")
+        .select("reminder_days_array, reminder_channels, quiet_hours_start, quiet_hours_end, smart_timing")
         .eq("user_id", u.user.id)
         .maybeSingle();
-      void scheduleBillReminder(saved, prof?.reminder_days_default ?? 2);
+      void scheduleBillReminders(saved, {
+        ...DEFAULT_PREFS,
+        daysBefore: prof?.reminder_days_array ?? DEFAULT_PREFS.daysBefore,
+        channels: prof?.reminder_channels ?? DEFAULT_PREFS.channels,
+        quietStart: prof?.quiet_hours_start ?? null,
+        quietEnd: prof?.quiet_hours_end ?? null,
+        smartTiming: prof?.smart_timing ?? false,
+      });
     }
     onClose();
   };

@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounts: {
+        Row: {
+          access_token_encrypted: string | null
+          created_at: string
+          id: string
+          institution: string | null
+          linked_at: string
+          mask: string | null
+          provider: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token_encrypted?: string | null
+          created_at?: string
+          id?: string
+          institution?: string | null
+          linked_at?: string
+          mask?: string | null
+          provider?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token_encrypted?: string | null
+          created_at?: string
+          id?: string
+          institution?: string | null
+          linked_at?: string
+          mask?: string | null
+          provider?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       bill_payments: {
         Row: {
           amount: number
@@ -65,6 +104,7 @@ export type Database = {
           name: string
           notes: string | null
           reminder_days: number | null
+          snoozed_until: string | null
           updated_at: string
           user_id: string
         }
@@ -80,6 +120,7 @@ export type Database = {
           name: string
           notes?: string | null
           reminder_days?: number | null
+          snoozed_until?: string | null
           updated_at?: string
           user_id: string
         }
@@ -95,6 +136,7 @@ export type Database = {
           name?: string
           notes?: string | null
           reminder_days?: number | null
+          snoozed_until?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -145,7 +187,13 @@ export type Database = {
           display_name: string | null
           id: string
           monthly_budget: number | null
+          pay_requires_biometric: boolean
+          quiet_hours_end: number | null
+          quiet_hours_start: number | null
+          reminder_channels: string[]
+          reminder_days_array: number[]
           reminder_days_default: number
+          smart_timing: boolean
           updated_at: string
           user_id: string
         }
@@ -157,7 +205,13 @@ export type Database = {
           display_name?: string | null
           id?: string
           monthly_budget?: number | null
+          pay_requires_biometric?: boolean
+          quiet_hours_end?: number | null
+          quiet_hours_start?: number | null
+          reminder_channels?: string[]
+          reminder_days_array?: number[]
           reminder_days_default?: number
+          smart_timing?: boolean
           updated_at?: string
           user_id: string
         }
@@ -169,7 +223,13 @@ export type Database = {
           display_name?: string | null
           id?: string
           monthly_budget?: number | null
+          pay_requires_biometric?: boolean
+          quiet_hours_end?: number | null
+          quiet_hours_start?: number | null
+          reminder_channels?: string[]
+          reminder_days_array?: number[]
           reminder_days_default?: number
+          smart_timing?: boolean
           updated_at?: string
           user_id?: string
         }
