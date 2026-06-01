@@ -64,6 +64,7 @@ export type Database = {
           is_archived: boolean
           name: string
           notes: string | null
+          reminder_days: number | null
           updated_at: string
           user_id: string
         }
@@ -78,6 +79,7 @@ export type Database = {
           is_archived?: boolean
           name: string
           notes?: string | null
+          reminder_days?: number | null
           updated_at?: string
           user_id: string
         }
@@ -92,6 +94,43 @@ export type Database = {
           is_archived?: boolean
           name?: string
           notes?: string | null
+          reminder_days?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      incomes: {
+        Row: {
+          amount: number
+          created_at: string
+          frequency: Database["public"]["Enums"]["bill_frequency"]
+          id: string
+          is_archived: boolean
+          name: string
+          start_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          frequency?: Database["public"]["Enums"]["bill_frequency"]
+          id?: string
+          is_archived?: boolean
+          name: string
+          start_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          frequency?: Database["public"]["Enums"]["bill_frequency"]
+          id?: string
+          is_archived?: boolean
+          name?: string
+          start_date?: string
           updated_at?: string
           user_id?: string
         }
@@ -100,29 +139,74 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          biometric_enabled: boolean
           created_at: string
           currency: string
           display_name: string | null
           id: string
+          monthly_budget: number | null
+          reminder_days_default: number
           updated_at: string
           user_id: string
         }
         Insert: {
           avatar_url?: string | null
+          biometric_enabled?: boolean
           created_at?: string
           currency?: string
           display_name?: string | null
           id?: string
+          monthly_budget?: number | null
+          reminder_days_default?: number
           updated_at?: string
           user_id: string
         }
         Update: {
           avatar_url?: string | null
+          biometric_enabled?: boolean
           created_at?: string
           currency?: string
           display_name?: string | null
           id?: string
+          monthly_budget?: number | null
+          reminder_days_default?: number
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["txn_kind"]
+          name: string
+          notes: string | null
+          occurred_on: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category?: string
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["txn_kind"]
+          name: string
+          notes?: string | null
+          occurred_on?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["txn_kind"]
+          name?: string
+          notes?: string | null
+          occurred_on?: string
           user_id?: string
         }
         Relationships: []
@@ -136,6 +220,7 @@ export type Database = {
     }
     Enums: {
       bill_frequency: "once" | "weekly" | "monthly" | "yearly"
+      txn_kind: "expense" | "income"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -264,6 +349,7 @@ export const Constants = {
   public: {
     Enums: {
       bill_frequency: ["once", "weekly", "monthly", "yearly"],
+      txn_kind: ["expense", "income"],
     },
   },
 } as const
