@@ -183,6 +183,10 @@ function SettingsPage() {
         <h1 className="font-display text-xl font-bold text-foreground">Settings</h1>
       </header>
 
+      <Section title="Demo data" icon={Sparkles}>
+        <DemoSeeder />
+      </Section>
+
       <Section title="Budget">
         <label className="block px-5 pb-3">
           <span className="mb-1 block text-xs font-medium text-muted-foreground">
