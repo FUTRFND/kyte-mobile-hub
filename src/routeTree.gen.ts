@@ -9,10 +9,19 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as InsightsRouteImport } from './routes/insights'
+import { Route as IncomeRouteImport } from './routes/income'
+import { Route as HomeRouteImport } from './routes/home'
+import { Route as HistoryRouteImport } from './routes/history'
+import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AppRouteImport } from './routes/app'
+import { Route as AccountsRouteImport } from './routes/accounts'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BillIdRouteImport } from './routes/bill.$id'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppInsightsRouteImport } from './routes/app.insights'
@@ -23,6 +32,16 @@ import { Route as AppCalendarRouteImport } from './routes/app.calendar'
 import { Route as AppAccountsRouteImport } from './routes/app.accounts'
 import { Route as AppBillIdRouteImport } from './routes/app.bill.$id'
 
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -33,14 +52,49 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InsightsRoute = InsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IncomeRoute = IncomeRouteImport.update({
+  id: '/income',
+  path: '/income',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomeRoute = HomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistoryRoute = HistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CalendarRoute = CalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppRoute = AppRouteImport.update({
   id: '/app',
   path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountsRoute = AccountsRouteImport.update({
+  id: '/accounts',
+  path: '/accounts',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BillIdRoute = BillIdRouteImport.update({
+  id: '/bill/$id',
+  path: '/bill/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
@@ -91,9 +145,17 @@ const AppBillIdRoute = AppBillIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/accounts': typeof AccountsRoute
   '/app': typeof AppRouteWithChildren
+  '/calendar': typeof CalendarRoute
+  '/history': typeof HistoryRoute
+  '/home': typeof HomeRoute
+  '/income': typeof IncomeRoute
+  '/insights': typeof InsightsRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/app/accounts': typeof AppAccountsRoute
   '/app/calendar': typeof AppCalendarRoute
   '/app/history': typeof AppHistoryRoute
@@ -102,13 +164,22 @@ export interface FileRoutesByFullPath {
   '/app/insights': typeof AppInsightsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/settings': typeof AppSettingsRoute
+  '/bill/$id': typeof BillIdRoute
   '/app/bill/$id': typeof AppBillIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/accounts': typeof AccountsRoute
   '/app': typeof AppRouteWithChildren
+  '/calendar': typeof CalendarRoute
+  '/history': typeof HistoryRoute
+  '/home': typeof HomeRoute
+  '/income': typeof IncomeRoute
+  '/insights': typeof InsightsRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/app/accounts': typeof AppAccountsRoute
   '/app/calendar': typeof AppCalendarRoute
   '/app/history': typeof AppHistoryRoute
@@ -117,14 +188,23 @@ export interface FileRoutesByTo {
   '/app/insights': typeof AppInsightsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/settings': typeof AppSettingsRoute
+  '/bill/$id': typeof BillIdRoute
   '/app/bill/$id': typeof AppBillIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/accounts': typeof AccountsRoute
   '/app': typeof AppRouteWithChildren
+  '/calendar': typeof CalendarRoute
+  '/history': typeof HistoryRoute
+  '/home': typeof HomeRoute
+  '/income': typeof IncomeRoute
+  '/insights': typeof InsightsRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/app/accounts': typeof AppAccountsRoute
   '/app/calendar': typeof AppCalendarRoute
   '/app/history': typeof AppHistoryRoute
@@ -133,15 +213,24 @@ export interface FileRoutesById {
   '/app/insights': typeof AppInsightsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/settings': typeof AppSettingsRoute
+  '/bill/$id': typeof BillIdRoute
   '/app/bill/$id': typeof AppBillIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/accounts'
     | '/app'
+    | '/calendar'
+    | '/history'
+    | '/home'
+    | '/income'
+    | '/insights'
     | '/login'
     | '/onboarding'
+    | '/profile'
+    | '/settings'
     | '/app/accounts'
     | '/app/calendar'
     | '/app/history'
@@ -150,13 +239,22 @@ export interface FileRouteTypes {
     | '/app/insights'
     | '/app/profile'
     | '/app/settings'
+    | '/bill/$id'
     | '/app/bill/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/accounts'
     | '/app'
+    | '/calendar'
+    | '/history'
+    | '/home'
+    | '/income'
+    | '/insights'
     | '/login'
     | '/onboarding'
+    | '/profile'
+    | '/settings'
     | '/app/accounts'
     | '/app/calendar'
     | '/app/history'
@@ -165,13 +263,22 @@ export interface FileRouteTypes {
     | '/app/insights'
     | '/app/profile'
     | '/app/settings'
+    | '/bill/$id'
     | '/app/bill/$id'
   id:
     | '__root__'
     | '/'
+    | '/accounts'
     | '/app'
+    | '/calendar'
+    | '/history'
+    | '/home'
+    | '/income'
+    | '/insights'
     | '/login'
     | '/onboarding'
+    | '/profile'
+    | '/settings'
     | '/app/accounts'
     | '/app/calendar'
     | '/app/history'
@@ -180,18 +287,42 @@ export interface FileRouteTypes {
     | '/app/insights'
     | '/app/profile'
     | '/app/settings'
+    | '/bill/$id'
     | '/app/bill/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccountsRoute: typeof AccountsRoute
   AppRoute: typeof AppRouteWithChildren
+  CalendarRoute: typeof CalendarRoute
+  HistoryRoute: typeof HistoryRoute
+  HomeRoute: typeof HomeRoute
+  IncomeRoute: typeof IncomeRoute
+  InsightsRoute: typeof InsightsRoute
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
+  ProfileRoute: typeof ProfileRoute
+  SettingsRoute: typeof SettingsRoute
+  BillIdRoute: typeof BillIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/onboarding': {
       id: '/onboarding'
       path: '/onboarding'
@@ -206,6 +337,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/insights': {
+      id: '/insights'
+      path: '/insights'
+      fullPath: '/insights'
+      preLoaderRoute: typeof InsightsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/income': {
+      id: '/income'
+      path: '/income'
+      fullPath: '/income'
+      preLoaderRoute: typeof IncomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/home': {
+      id: '/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/history': {
+      id: '/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof HistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/calendar': {
+      id: '/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof CalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app': {
       id: '/app'
       path: '/app'
@@ -213,11 +379,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/accounts': {
+      id: '/accounts'
+      path: '/accounts'
+      fullPath: '/accounts'
+      preLoaderRoute: typeof AccountsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bill/$id': {
+      id: '/bill/$id'
+      path: '/bill/$id'
+      fullPath: '/bill/$id'
+      preLoaderRoute: typeof BillIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/settings': {
@@ -314,9 +494,18 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccountsRoute: AccountsRoute,
   AppRoute: AppRouteWithChildren,
+  CalendarRoute: CalendarRoute,
+  HistoryRoute: HistoryRoute,
+  HomeRoute: HomeRoute,
+  IncomeRoute: IncomeRoute,
+  InsightsRoute: InsightsRoute,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
+  ProfileRoute: ProfileRoute,
+  SettingsRoute: SettingsRoute,
+  BillIdRoute: BillIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
