@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, Link } from "@tanstack/react-router";
+import { createFileRoute, Outlet, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Home, CalendarDays, BarChart3, User2, type LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +18,7 @@ const tabs: Tab[] = [
 ];
 
 function AppShell() {
+  const navigate = useNavigate();
   const [authReady, setAuthReady] = useState(false);
   const [hasSession, setHasSession] = useState(false);
 
@@ -46,14 +47,17 @@ function AppShell() {
     };
   }, []);
 
+  useEffect(() => {
+    if (authReady && !hasSession) {
+      navigate({ to: "/login", replace: true });
+    }
+  }, [authReady, hasSession, navigate]);
+
   if (!authReady) {
     return <div className="min-h-dvh bg-background" aria-hidden />;
   }
 
   if (!hasSession) {
-    if (typeof window !== "undefined") {
-      window.location.replace("/login");
-    }
     return <div className="min-h-dvh bg-background" aria-hidden />;
   }
 
