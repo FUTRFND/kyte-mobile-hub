@@ -41,11 +41,12 @@ function AppShell() {
               <li key={to} className="flex-1">
                 <Link
                   to={to}
-                  activeProps={{ className: "text-primary" }}
+                  activeProps={{ className: "text-primary", "aria-current": "page" }}
                   inactiveProps={{ className: "text-muted-foreground" }}
-                  className="flex flex-col items-center gap-1 rounded-lg py-1.5 text-xs font-medium"
+                  aria-label={label}
+                  className="flex min-h-11 flex-col items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-medium"
                 >
-                  <Icon className="h-5 w-5" strokeWidth={2} />
+                  <Icon className="h-5 w-5" strokeWidth={2} aria-hidden />
                   <span>{label}</span>
                 </Link>
               </li>
