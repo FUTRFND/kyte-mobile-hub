@@ -9,10 +9,13 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as InsightsRouteImport } from './routes/insights'
 import { Route as HomeRouteImport } from './routes/home'
+import { Route as HistoryRouteImport } from './routes/history'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
@@ -26,6 +29,16 @@ import { Route as AppCalendarRouteImport } from './routes/app.calendar'
 import { Route as AppAccountsRouteImport } from './routes/app.accounts'
 import { Route as AppBillIdRouteImport } from './routes/app.bill.$id'
 
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -44,6 +57,11 @@ const InsightsRoute = InsightsRouteImport.update({
 const HomeRoute = HomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistoryRoute = HistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CalendarRoute = CalendarRouteImport.update({
@@ -111,10 +129,13 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/calendar': typeof CalendarRoute
+  '/history': typeof HistoryRoute
   '/home': typeof HomeRoute
   '/insights': typeof InsightsRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/app/accounts': typeof AppAccountsRoute
   '/app/calendar': typeof AppCalendarRoute
   '/app/history': typeof AppHistoryRoute
@@ -129,10 +150,13 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/calendar': typeof CalendarRoute
+  '/history': typeof HistoryRoute
   '/home': typeof HomeRoute
   '/insights': typeof InsightsRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/app/accounts': typeof AppAccountsRoute
   '/app/calendar': typeof AppCalendarRoute
   '/app/history': typeof AppHistoryRoute
@@ -148,10 +172,13 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/calendar': typeof CalendarRoute
+  '/history': typeof HistoryRoute
   '/home': typeof HomeRoute
   '/insights': typeof InsightsRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/app/accounts': typeof AppAccountsRoute
   '/app/calendar': typeof AppCalendarRoute
   '/app/history': typeof AppHistoryRoute
@@ -168,10 +195,13 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/calendar'
+    | '/history'
     | '/home'
     | '/insights'
     | '/login'
     | '/onboarding'
+    | '/profile'
+    | '/settings'
     | '/app/accounts'
     | '/app/calendar'
     | '/app/history'
@@ -186,10 +216,13 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/calendar'
+    | '/history'
     | '/home'
     | '/insights'
     | '/login'
     | '/onboarding'
+    | '/profile'
+    | '/settings'
     | '/app/accounts'
     | '/app/calendar'
     | '/app/history'
@@ -204,10 +237,13 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/calendar'
+    | '/history'
     | '/home'
     | '/insights'
     | '/login'
     | '/onboarding'
+    | '/profile'
+    | '/settings'
     | '/app/accounts'
     | '/app/calendar'
     | '/app/history'
@@ -223,14 +259,31 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   CalendarRoute: typeof CalendarRoute
+  HistoryRoute: typeof HistoryRoute
   HomeRoute: typeof HomeRoute
   InsightsRoute: typeof InsightsRoute
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
+  ProfileRoute: typeof ProfileRoute
+  SettingsRoute: typeof SettingsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/onboarding': {
       id: '/onboarding'
       path: '/onboarding'
@@ -257,6 +310,13 @@ declare module '@tanstack/react-router' {
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/history': {
+      id: '/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof HistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/calendar': {
@@ -376,10 +436,13 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   CalendarRoute: CalendarRoute,
+  HistoryRoute: HistoryRoute,
   HomeRoute: HomeRoute,
   InsightsRoute: InsightsRoute,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
+  ProfileRoute: ProfileRoute,
+  SettingsRoute: SettingsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
