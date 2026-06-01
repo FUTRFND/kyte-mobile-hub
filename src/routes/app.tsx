@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Home, CalendarDays, BarChart3, User2, type LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { BiometricGate } from "@/components/kyte/BiometricGate";
@@ -21,6 +21,7 @@ function AppShell() {
   const navigate = useNavigate();
   const [authReady, setAuthReady] = useState(false);
   const [hasSession, setHasSession] = useState(false);
+  const sessionHydratedRef = useRef(false);
 
   useEffect(() => {
     installOfflineQueue();
@@ -29,15 +30,17 @@ function AppShell() {
   useEffect(() => {
     let active = true;
 
-    supabase.auth.getSession().then(({ data }) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!active) return;
-      setHasSession(Boolean(data.session));
+      if (!sessionHydratedRef.current) return;
+      setHasSession(Boolean(session));
       setAuthReady(true);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
-      setHasSession(Boolean(session));
+      sessionHydratedRef.current = true;
+      setHasSession(Boolean(data.session));
       setAuthReady(true);
     });
 
