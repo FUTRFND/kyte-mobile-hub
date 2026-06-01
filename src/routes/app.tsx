@@ -1,15 +1,11 @@
-import { createFileRoute, Outlet, Link, redirect } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { createFileRoute, Outlet, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Home, CalendarDays, BarChart3, User2, type LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { BiometricGate } from "@/components/kyte/BiometricGate";
 import { installOfflineQueue } from "@/lib/kyte/offlineQueue";
 
 export const Route = createFileRoute("/app")({
-  beforeLoad: async () => {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) throw redirect({ to: "/login" });
-  },
   component: AppShell,
 });
 
@@ -22,9 +18,45 @@ const tabs: Tab[] = [
 ];
 
 function AppShell() {
+  const [authReady, setAuthReady] = useState(false);
+  const [hasSession, setHasSession] = useState(false);
+
   useEffect(() => {
     installOfflineQueue();
   }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      setHasSession(Boolean(data.session));
+      setAuthReady(true);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!active) return;
+      setHasSession(Boolean(session));
+      setAuthReady(true);
+    });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  if (!authReady) {
+    return <div className="min-h-dvh bg-background" aria-hidden />;
+  }
+
+  if (!hasSession) {
+    if (typeof window !== "undefined") {
+      window.location.replace("/login");
+    }
+    return <div className="min-h-dvh bg-background" aria-hidden />;
+  }
+
   return (
     <BiometricGate>
       <div className="flex min-h-dvh flex-col bg-background safe-top">
