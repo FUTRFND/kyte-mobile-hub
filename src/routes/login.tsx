@@ -42,15 +42,17 @@ function Login() {
     setError(null);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email: values.email,
           password: values.password,
           options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
+        if (data.session) navigate({ to: "/app/home", replace: true });
       } else {
-        const { error } = await supabase.auth.signInWithPassword(values);
+        const { data, error } = await supabase.auth.signInWithPassword(values);
         if (error) throw error;
+        if (data.session) navigate({ to: "/app/home", replace: true });
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Authentication failed");
