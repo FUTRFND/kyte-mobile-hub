@@ -1,7 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { LogOut, Check } from "lucide-react";
+import { LogOut, Check, Settings, History, Wallet, ChevronRight } from "lucide-react";
 import { PageHeader } from "@/components/kyte/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { profileQuery } from "@/lib/kyte/queries";
@@ -105,6 +105,15 @@ function ProfileTab() {
         </div>
       </section>
 
+      <section className="mt-6 px-5">
+        <h2 className="mb-3 text-xs uppercase tracking-wider text-muted-foreground">More</h2>
+        <div className="overflow-hidden rounded-2xl border border-border bg-surface-elevated">
+          <NavLink to="/app/history" icon={History} label="Transaction history" />
+          <NavLink to="/app/income" icon={Wallet} label="Income sources" />
+          <NavLink to="/app/settings" icon={Settings} label="Settings & security" />
+        </div>
+      </section>
+
       <section className="mt-8 px-5 pb-10">
         <button
           onClick={signOut}
@@ -114,5 +123,23 @@ function ProfileTab() {
         </button>
       </section>
     </>
+  );
+}
+
+function NavLink({
+  to,
+  icon: Icon,
+  label,
+}: {
+  to: "/app/history" | "/app/income" | "/app/settings";
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+}) {
+  return (
+    <Link to={to} className="flex items-center gap-3 px-5 py-4 active:bg-surface/50">
+      <Icon className="h-4 w-4 text-primary" />
+      <span className="flex-1 text-sm font-semibold text-foreground">{label}</span>
+      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+    </Link>
   );
 }

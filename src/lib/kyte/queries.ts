@@ -1,6 +1,11 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import type { Bill, Payment } from "./bills";
+
+export type Income = Database["public"]["Tables"]["incomes"]["Row"];
+export type Transaction = Database["public"]["Tables"]["transactions"]["Row"];
+export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 export const billsQuery = queryOptions({
   queryKey: ["bills"],
@@ -27,9 +32,34 @@ export const paymentsQuery = queryOptions({
   },
 });
 
+export const incomesQuery = queryOptions({
+  queryKey: ["incomes"],
+  queryFn: async (): Promise<Income[]> => {
+    const { data, error } = await supabase
+      .from("incomes")
+      .select("*")
+      .eq("is_archived", false)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+  },
+});
+
+export const transactionsQuery = queryOptions({
+  queryKey: ["transactions"],
+  queryFn: async (): Promise<Transaction[]> => {
+    const { data, error } = await supabase
+      .from("transactions")
+      .select("*")
+      .order("occurred_on", { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+  },
+});
+
 export const profileQuery = queryOptions({
   queryKey: ["profile"],
-  queryFn: async () => {
+  queryFn: async (): Promise<Profile | null> => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return null;
     const { data, error } = await supabase

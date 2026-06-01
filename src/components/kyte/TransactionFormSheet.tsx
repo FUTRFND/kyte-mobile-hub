@@ -5,26 +5,27 @@ import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { CATEGORIES, CATEGORY_COLORS, type Bill, type Frequency } from "@/lib/kyte/bills";
+import { CATEGORIES, CATEGORY_COLORS } from "@/lib/kyte/bills";
+import type { Transaction } from "@/lib/kyte/queries";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Required").max(80),
-  amount: z.coerce.number().min(0).max(1_000_000),
-  due_date: z.string().min(1, "Required"),
-  frequency: z.enum(["once", "weekly", "monthly", "yearly"]),
+  amount: z.coerce.number().min(0).max(10_000_000),
+  occurred_on: z.string().min(1),
+  kind: z.enum(["expense", "income"]),
   category: z.string().min(1),
   notes: z.string().max(500).optional().or(z.literal("")),
 });
 type Values = z.infer<typeof schema>;
 
-export function BillFormSheet({
+export function TransactionFormSheet({
   open,
   onClose,
-  bill,
+  txn,
 }: {
   open: boolean;
   onClose: () => void;
-  bill?: Bill;
+  txn?: Transaction;
 }) {
   const qc = useQueryClient();
   const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } =
@@ -33,8 +34,8 @@ export function BillFormSheet({
       defaultValues: {
         name: "",
         amount: 0,
-        due_date: new Date().toISOString().slice(0, 10),
-        frequency: "monthly",
+        occurred_on: new Date().toISOString().slice(0, 10),
+        kind: "expense",
         category: "Other",
         notes: "",
       },
@@ -42,63 +43,39 @@ export function BillFormSheet({
 
   useEffect(() => {
     if (!open) return;
-    if (bill) {
-      reset({
-        name: bill.name,
-        amount: Number(bill.amount),
-        due_date: bill.due_date,
-        frequency: bill.frequency,
-        category: bill.category,
-        notes: bill.notes ?? "",
-      });
-    } else {
-      reset({
-        name: "",
-        amount: 0,
-        due_date: new Date().toISOString().slice(0, 10),
-        frequency: "monthly",
-        category: "Other",
-        notes: "",
-      });
-    }
-  }, [open, bill, reset]);
+    reset(
+      txn
+        ? {
+            name: txn.name,
+            amount: Number(txn.amount),
+            occurred_on: txn.occurred_on,
+            kind: txn.kind,
+            category: txn.category,
+            notes: txn.notes ?? "",
+          }
+        : {
+            name: "",
+            amount: 0,
+            occurred_on: new Date().toISOString().slice(0, 10),
+            kind: "expense",
+            category: "Other",
+            notes: "",
+          },
+    );
+  }, [open, txn, reset]);
 
   const onSubmit = async (v: Values) => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
-    const payload = {
-      user_id: u.user.id,
-      name: v.name,
-      amount: v.amount,
-      due_date: v.due_date,
-      frequency: v.frequency as Frequency,
-      category: v.category,
-      color: CATEGORY_COLORS[v.category] ?? "#0098FF",
-      notes: v.notes || null,
-    };
-    let saved = null;
-    if (bill) {
-      const { data } = await supabase.from("bills").update(payload).eq("id", bill.id).select().single();
-      saved = data;
-    } else {
-      const { data } = await supabase.from("bills").insert(payload).select().single();
-      saved = data;
-    }
-    qc.invalidateQueries({ queryKey: ["bills"] });
-    if (saved) {
-      const { scheduleBillReminder } = await import("@/lib/kyte/notifications");
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("reminder_days_default")
-        .eq("user_id", u.user.id)
-        .maybeSingle();
-      void scheduleBillReminder(saved, prof?.reminder_days_default ?? 2);
-    }
+    const payload = { ...v, notes: v.notes || null, user_id: u.user.id };
+    if (txn) await supabase.from("transactions").update(payload).eq("id", txn.id);
+    else await supabase.from("transactions").insert(payload);
+    qc.invalidateQueries({ queryKey: ["transactions"] });
     onClose();
   };
 
   if (!open) return null;
-
+  const kind = watch("kind");
   const cat = watch("category");
 
   return (
@@ -109,7 +86,7 @@ export function BillFormSheet({
       >
         <div className="flex items-center justify-between px-5 pt-4 pb-2">
           <h2 className="font-display text-lg font-bold text-foreground">
-            {bill ? "Edit bill" : "New bill"}
+            {txn ? "Edit entry" : "New entry"}
           </h2>
           <button
             onClick={onClose}
@@ -121,10 +98,27 @@ export function BillFormSheet({
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3 overflow-y-auto px-5 pb-5">
-          <Field label="Name" error={errors.name?.message}>
+          <div className="grid grid-cols-2 gap-2">
+            {(["expense", "income"] as const).map((k) => (
+              <button
+                type="button"
+                key={k}
+                onClick={() => setValue("kind", k, { shouldDirty: true })}
+                className={`h-11 rounded-xl text-sm font-semibold capitalize ${
+                  kind === k
+                    ? "bg-primary text-primary-foreground"
+                    : "border border-border bg-surface text-muted-foreground"
+                }`}
+              >
+                {k}
+              </button>
+            ))}
+          </div>
+
+          <Field label="Description" error={errors.name?.message}>
             <input
               {...register("name")}
-              placeholder="Netflix, Rent, etc."
+              placeholder="Coffee, refund, etc."
               className="h-12 w-full rounded-xl border border-input bg-surface px-3 text-sm text-foreground outline-none"
             />
           </Field>
@@ -139,33 +133,14 @@ export function BillFormSheet({
                 className="h-12 w-full rounded-xl border border-input bg-surface px-3 text-sm text-foreground outline-none"
               />
             </Field>
-            <Field label="First due" error={errors.due_date?.message}>
+            <Field label="Date">
               <input
                 type="date"
-                {...register("due_date")}
+                {...register("occurred_on")}
                 className="h-12 w-full rounded-xl border border-input bg-surface px-3 text-sm text-foreground outline-none"
               />
             </Field>
           </div>
-
-          <Field label="Frequency">
-            <div className="grid grid-cols-4 gap-2">
-              {(["once", "weekly", "monthly", "yearly"] as const).map((f) => (
-                <button
-                  type="button"
-                  key={f}
-                  onClick={() => setValue("frequency", f, { shouldDirty: true })}
-                  className={`h-10 rounded-xl text-xs font-semibold capitalize ${
-                    watch("frequency") === f
-                      ? "bg-primary text-primary-foreground"
-                      : "border border-border bg-surface text-muted-foreground"
-                  }`}
-                >
-                  {f}
-                </button>
-              ))}
-            </div>
-          </Field>
 
           <Field label="Category">
             <div className="flex flex-wrap gap-2">
@@ -180,10 +155,7 @@ export function BillFormSheet({
                       : "border border-border bg-surface text-muted-foreground"
                   }`}
                 >
-                  <span
-                    className="h-2 w-2 rounded-full"
-                    style={{ background: CATEGORY_COLORS[c] }}
-                  />
+                  <span className="h-2 w-2 rounded-full" style={{ background: CATEGORY_COLORS[c] }} />
                   {c}
                 </button>
               ))}
@@ -193,7 +165,7 @@ export function BillFormSheet({
           <Field label="Notes (optional)">
             <textarea
               {...register("notes")}
-              rows={3}
+              rows={2}
               className="w-full resize-none rounded-xl border border-input bg-surface px-3 py-2 text-sm text-foreground outline-none"
             />
           </Field>
@@ -203,7 +175,7 @@ export function BillFormSheet({
             disabled={isSubmitting}
             className="mt-2 h-14 rounded-2xl bg-primary text-base font-semibold text-primary-foreground disabled:opacity-60"
           >
-            {isSubmitting ? "Saving…" : bill ? "Save changes" : "Add bill"}
+            {isSubmitting ? "Saving…" : txn ? "Save changes" : "Add entry"}
           </button>
         </form>
       </div>

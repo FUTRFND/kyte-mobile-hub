@@ -5,26 +5,25 @@ import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { CATEGORIES, CATEGORY_COLORS, type Bill, type Frequency } from "@/lib/kyte/bills";
+import type { Income } from "@/lib/kyte/queries";
+import type { Frequency } from "@/lib/kyte/bills";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Required").max(80),
-  amount: z.coerce.number().min(0).max(1_000_000),
-  due_date: z.string().min(1, "Required"),
+  amount: z.coerce.number().min(0).max(10_000_000),
+  start_date: z.string().min(1),
   frequency: z.enum(["once", "weekly", "monthly", "yearly"]),
-  category: z.string().min(1),
-  notes: z.string().max(500).optional().or(z.literal("")),
 });
 type Values = z.infer<typeof schema>;
 
-export function BillFormSheet({
+export function IncomeFormSheet({
   open,
   onClose,
-  bill,
+  income,
 }: {
   open: boolean;
   onClose: () => void;
-  bill?: Bill;
+  income?: Income;
 }) {
   const qc = useQueryClient();
   const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } =
@@ -33,83 +32,51 @@ export function BillFormSheet({
       defaultValues: {
         name: "",
         amount: 0,
-        due_date: new Date().toISOString().slice(0, 10),
+        start_date: new Date().toISOString().slice(0, 10),
         frequency: "monthly",
-        category: "Other",
-        notes: "",
       },
     });
 
   useEffect(() => {
     if (!open) return;
-    if (bill) {
-      reset({
-        name: bill.name,
-        amount: Number(bill.amount),
-        due_date: bill.due_date,
-        frequency: bill.frequency,
-        category: bill.category,
-        notes: bill.notes ?? "",
-      });
-    } else {
-      reset({
-        name: "",
-        amount: 0,
-        due_date: new Date().toISOString().slice(0, 10),
-        frequency: "monthly",
-        category: "Other",
-        notes: "",
-      });
-    }
-  }, [open, bill, reset]);
+    reset(
+      income
+        ? {
+            name: income.name,
+            amount: Number(income.amount),
+            start_date: income.start_date,
+            frequency: income.frequency,
+          }
+        : {
+            name: "",
+            amount: 0,
+            start_date: new Date().toISOString().slice(0, 10),
+            frequency: "monthly",
+          },
+    );
+  }, [open, income, reset]);
 
   const onSubmit = async (v: Values) => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
-    const payload = {
-      user_id: u.user.id,
-      name: v.name,
-      amount: v.amount,
-      due_date: v.due_date,
-      frequency: v.frequency as Frequency,
-      category: v.category,
-      color: CATEGORY_COLORS[v.category] ?? "#0098FF",
-      notes: v.notes || null,
-    };
-    let saved = null;
-    if (bill) {
-      const { data } = await supabase.from("bills").update(payload).eq("id", bill.id).select().single();
-      saved = data;
-    } else {
-      const { data } = await supabase.from("bills").insert(payload).select().single();
-      saved = data;
-    }
-    qc.invalidateQueries({ queryKey: ["bills"] });
-    if (saved) {
-      const { scheduleBillReminder } = await import("@/lib/kyte/notifications");
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("reminder_days_default")
-        .eq("user_id", u.user.id)
-        .maybeSingle();
-      void scheduleBillReminder(saved, prof?.reminder_days_default ?? 2);
-    }
+    const payload = { ...v, frequency: v.frequency as Frequency, user_id: u.user.id };
+    if (income) await supabase.from("incomes").update(payload).eq("id", income.id);
+    else await supabase.from("incomes").insert(payload);
+    qc.invalidateQueries({ queryKey: ["incomes"] });
     onClose();
   };
 
   if (!open) return null;
 
-  const cat = watch("category");
-
   return (
     <div className="fixed inset-0 z-[60] flex items-end bg-black/60" onClick={onClose}>
       <div
-        className="flex max-h-[92vh] w-full flex-col rounded-t-3xl border-t border-border bg-background pb-[env(safe-area-inset-bottom)]"
+        className="flex w-full flex-col rounded-t-3xl border-t border-border bg-background pb-[env(safe-area-inset-bottom)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-5 pt-4 pb-2">
           <h2 className="font-display text-lg font-bold text-foreground">
-            {bill ? "Edit bill" : "New bill"}
+            {income ? "Edit income" : "New income"}
           </h2>
           <button
             onClick={onClose}
@@ -120,15 +87,14 @@ export function BillFormSheet({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3 overflow-y-auto px-5 pb-5">
-          <Field label="Name" error={errors.name?.message}>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3 px-5 pb-5">
+          <Field label="Source" error={errors.name?.message}>
             <input
               {...register("name")}
-              placeholder="Netflix, Rent, etc."
+              placeholder="Salary, freelance, etc."
               className="h-12 w-full rounded-xl border border-input bg-surface px-3 text-sm text-foreground outline-none"
             />
           </Field>
-
           <div className="grid grid-cols-2 gap-3">
             <Field label="Amount" error={errors.amount?.message}>
               <input
@@ -139,15 +105,14 @@ export function BillFormSheet({
                 className="h-12 w-full rounded-xl border border-input bg-surface px-3 text-sm text-foreground outline-none"
               />
             </Field>
-            <Field label="First due" error={errors.due_date?.message}>
+            <Field label="Starting">
               <input
                 type="date"
-                {...register("due_date")}
+                {...register("start_date")}
                 className="h-12 w-full rounded-xl border border-input bg-surface px-3 text-sm text-foreground outline-none"
               />
             </Field>
           </div>
-
           <Field label="Frequency">
             <div className="grid grid-cols-4 gap-2">
               {(["once", "weekly", "monthly", "yearly"] as const).map((f) => (
@@ -167,43 +132,12 @@ export function BillFormSheet({
             </div>
           </Field>
 
-          <Field label="Category">
-            <div className="flex flex-wrap gap-2">
-              {CATEGORIES.map((c) => (
-                <button
-                  type="button"
-                  key={c}
-                  onClick={() => setValue("category", c, { shouldDirty: true })}
-                  className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${
-                    cat === c
-                      ? "bg-primary text-primary-foreground"
-                      : "border border-border bg-surface text-muted-foreground"
-                  }`}
-                >
-                  <span
-                    className="h-2 w-2 rounded-full"
-                    style={{ background: CATEGORY_COLORS[c] }}
-                  />
-                  {c}
-                </button>
-              ))}
-            </div>
-          </Field>
-
-          <Field label="Notes (optional)">
-            <textarea
-              {...register("notes")}
-              rows={3}
-              className="w-full resize-none rounded-xl border border-input bg-surface px-3 py-2 text-sm text-foreground outline-none"
-            />
-          </Field>
-
           <button
             type="submit"
             disabled={isSubmitting}
             className="mt-2 h-14 rounded-2xl bg-primary text-base font-semibold text-primary-foreground disabled:opacity-60"
           >
-            {isSubmitting ? "Saving…" : bill ? "Save changes" : "Add bill"}
+            {isSubmitting ? "Saving…" : income ? "Save changes" : "Add income"}
           </button>
         </form>
       </div>

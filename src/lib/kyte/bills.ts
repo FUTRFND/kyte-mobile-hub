@@ -41,7 +41,6 @@ export function formatMoney(amount: number, currency = "USD") {
   }
 }
 
-/** Parse a YYYY-MM-DD date string as a local-time Date (avoids TZ drift). */
 export function parseDate(s: string): Date {
   const [y, m, d] = s.split("-").map(Number);
   return new Date(y, (m ?? 1) - 1, d ?? 1);
@@ -54,7 +53,6 @@ export function toISODate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-/** Compute the next due date >= today for a recurring bill. */
 export function nextDue(bill: Pick<Bill, "due_date" | "frequency">, from = new Date()): Date {
   const start = parseDate(bill.due_date);
   const today = new Date(from.getFullYear(), from.getMonth(), from.getDate());
@@ -71,7 +69,6 @@ export function nextDue(bill: Pick<Bill, "due_date" | "frequency">, from = new D
   return d;
 }
 
-/** Occurrences of a bill within [start, end] inclusive. */
 export function occurrencesInRange(
   bill: Pick<Bill, "due_date" | "frequency">,
   start: Date,
@@ -84,7 +81,6 @@ export function occurrencesInRange(
     return out;
   }
   const cursor = new Date(first);
-  // Fast-forward to start
   const guard = 1200;
   let i = 0;
   while (cursor < start && i < guard) {
@@ -112,4 +108,18 @@ export function daysUntil(date: Date, from = new Date()): number {
 
 export function frequencyLabel(f: Frequency) {
   return { once: "One-time", weekly: "Weekly", monthly: "Monthly", yearly: "Yearly" }[f];
+}
+
+/** Normalize any frequency into a monthly equivalent amount. */
+export function monthlyEquivalent(amount: number, freq: Frequency): number {
+  switch (freq) {
+    case "weekly":
+      return amount * 4.345;
+    case "monthly":
+      return amount;
+    case "yearly":
+      return amount / 12;
+    case "once":
+      return 0; // not a recurring contribution
+  }
 }
