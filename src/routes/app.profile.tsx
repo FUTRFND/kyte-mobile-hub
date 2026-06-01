@@ -1,7 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { LogOut, Check } from "lucide-react";
+import { LogOut, Check, Settings, History, Wallet, ChevronRight } from "lucide-react";
 import { PageHeader } from "@/components/kyte/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { profileQuery } from "@/lib/kyte/queries";
