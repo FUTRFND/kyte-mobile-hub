@@ -40,12 +40,16 @@ export function SmartBillSuggestions({ currency = "USD" }: { currency?: string }
     mutationFn: async (s: Suggestion) => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("Not signed in");
+      // Map detector frequency to the bill_frequency enum (no biweekly).
+      const freq: "monthly" | "weekly" | "yearly" =
+        s.frequency === "biweekly" ? "weekly" : s.frequency;
+      const amount = s.frequency === "biweekly" ? s.amount : s.amount;
       const { error } = await supabase.from("bills").insert({
         user_id: u.user.id,
         name: s.name,
-        amount: s.amount,
+        amount,
         due_date: s.nextDueDate,
-        frequency: s.frequency,
+        frequency: freq,
         category: s.category,
         color: CATEGORY_COLORS[s.category] ?? CATEGORY_COLORS.Other,
       });
