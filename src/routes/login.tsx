@@ -29,16 +29,18 @@ function Login() {
     resolver: zodResolver(schema),
   });
 
-  // Only bounce on a fresh sign-in (e.g. OAuth redirect). Ignore INITIAL_SESSION
-  // and TOKEN_REFRESHED so existing sessions don't kick the user off /login
-  // mid-typing if they intentionally navigated here.
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) {
+    let active = true;
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (active && data.session) {
         navigate({ to: "/app/home", replace: true });
       }
     });
-    return () => subscription.unsubscribe();
+
+    return () => {
+      active = false;
+    };
   }, [navigate]);
 
   const onSubmit = async (values: FormValues) => {
