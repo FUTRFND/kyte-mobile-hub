@@ -5,13 +5,31 @@ const TELLER_BASE = "https://api.teller.io";
 
 let cachedClient: Deno.HttpClient | null = null;
 
+function normalizePem(raw: string, label: "CERTIFICATE" | "PRIVATE KEY"): string {
+  let pem = raw.trim();
+  // Convert literal \n sequences into real newlines (common when pasted into form fields).
+  if (pem.includes("\\n")) pem = pem.replace(/\\n/g, "\n");
+  // If the markers are present but newlines were stripped, rebuild the PEM.
+  const begin = `-----BEGIN ${label}-----`;
+  const end = `-----END ${label}-----`;
+  if (pem.includes(begin) && !pem.includes("\n")) {
+    const body = pem.slice(pem.indexOf(begin) + begin.length, pem.indexOf(end)).replace(/\s+/g, "");
+    const lines = body.match(/.{1,64}/g) ?? [];
+    pem = `${begin}\n${lines.join("\n")}\n${end}\n`;
+  }
+  if (!pem.endsWith("\n")) pem += "\n";
+  return pem;
+}
+
 function getTellerClient(): Deno.HttpClient {
   if (cachedClient) return cachedClient;
-  const cert = Deno.env.get("TELLER_CERTIFICATE");
-  const key = Deno.env.get("TELLER_PRIVATE_KEY");
-  if (!cert || !key) {
+  const certRaw = Deno.env.get("TELLER_CERTIFICATE");
+  const keyRaw = Deno.env.get("TELLER_PRIVATE_KEY");
+  if (!certRaw || !keyRaw) {
     throw new Error("Teller mTLS credentials are not configured");
   }
+  const cert = normalizePem(certRaw, "CERTIFICATE");
+  const key = normalizePem(keyRaw, "PRIVATE KEY");
   // @ts-ignore - cert/key supported in Deno runtime used by Supabase Edge Functions
   cachedClient = Deno.createHttpClient({ cert, key });
   return cachedClient;
