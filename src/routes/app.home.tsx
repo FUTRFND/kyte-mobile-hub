@@ -19,6 +19,7 @@ import {
   occurrencesInRange,
 } from "@/lib/kyte/bills";
 import { AnimatedMoney, Sparkline } from "@/lib/kyte/animated";
+import { SmartBillSuggestions } from "@/components/kyte/SmartBillSuggestions";
 
 export const Route = createFileRoute("/app/home")({
   head: () => ({ meta: [{ title: "Home — Kyte" }] }),
