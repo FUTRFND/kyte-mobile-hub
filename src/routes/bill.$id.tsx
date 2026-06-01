@@ -3,7 +3,7 @@ import { ArrowLeft, Check, Clock, CreditCard, History, Trash2 } from "lucide-rea
 import { CATEGORY_COLORS, formatMoney, frequencyLabel, nextDue } from "@/lib/kyte/bills";
 import { getPreviewBill, previewPayments, previewProfile } from "@/lib/kyte/previewData";
 
-export const Route = createFileRoute("/bill/")({
+export const Route = createFileRoute("/bill/$id")({
   head: () => ({ meta: [{ title: "Bill — Kyte" }] }),
   component: BillPreviewPage,
 });

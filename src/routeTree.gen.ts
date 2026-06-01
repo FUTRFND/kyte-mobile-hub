@@ -21,6 +21,7 @@ import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AccountsRouteImport } from './routes/accounts'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BillIdRouteImport } from './routes/bill.$id'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppInsightsRouteImport } from './routes/app.insights'
@@ -29,7 +30,6 @@ import { Route as AppHomeRouteImport } from './routes/app.home'
 import { Route as AppHistoryRouteImport } from './routes/app.history'
 import { Route as AppCalendarRouteImport } from './routes/app.calendar'
 import { Route as AppAccountsRouteImport } from './routes/app.accounts'
-import { Route as BillRouteImport } from './routes/bill.'
 import { Route as AppBillIdRouteImport } from './routes/app.bill.$id'
 
 const SettingsRoute = SettingsRouteImport.update({
@@ -92,6 +92,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BillIdRoute = BillIdRouteImport.update({
+  id: '/bill/$id',
+  path: '/bill/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -132,11 +137,6 @@ const AppAccountsRoute = AppAccountsRouteImport.update({
   path: '/accounts',
   getParentRoute: () => AppRoute,
 } as any)
-const BillRoute = BillRouteImport.update({
-  id: '/bill/',
-  path: '/bill/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AppBillIdRoute = AppBillIdRouteImport.update({
   id: '/bill/$id',
   path: '/bill/$id',
@@ -156,7 +156,6 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
-  '/bill/': typeof BillRoute
   '/app/accounts': typeof AppAccountsRoute
   '/app/calendar': typeof AppCalendarRoute
   '/app/history': typeof AppHistoryRoute
@@ -165,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/app/insights': typeof AppInsightsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/settings': typeof AppSettingsRoute
+  '/bill/$id': typeof BillIdRoute
   '/app/bill/$id': typeof AppBillIdRoute
 }
 export interface FileRoutesByTo {
@@ -180,7 +180,6 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
-  '/bill': typeof BillRoute
   '/app/accounts': typeof AppAccountsRoute
   '/app/calendar': typeof AppCalendarRoute
   '/app/history': typeof AppHistoryRoute
@@ -189,6 +188,7 @@ export interface FileRoutesByTo {
   '/app/insights': typeof AppInsightsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/settings': typeof AppSettingsRoute
+  '/bill/$id': typeof BillIdRoute
   '/app/bill/$id': typeof AppBillIdRoute
 }
 export interface FileRoutesById {
@@ -205,7 +205,6 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
-  '/bill/': typeof BillRoute
   '/app/accounts': typeof AppAccountsRoute
   '/app/calendar': typeof AppCalendarRoute
   '/app/history': typeof AppHistoryRoute
@@ -214,6 +213,7 @@ export interface FileRoutesById {
   '/app/insights': typeof AppInsightsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/settings': typeof AppSettingsRoute
+  '/bill/$id': typeof BillIdRoute
   '/app/bill/$id': typeof AppBillIdRoute
 }
 export interface FileRouteTypes {
@@ -231,7 +231,6 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/profile'
     | '/settings'
-    | '/bill/'
     | '/app/accounts'
     | '/app/calendar'
     | '/app/history'
@@ -240,6 +239,7 @@ export interface FileRouteTypes {
     | '/app/insights'
     | '/app/profile'
     | '/app/settings'
+    | '/bill/$id'
     | '/app/bill/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -255,7 +255,6 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/profile'
     | '/settings'
-    | '/bill'
     | '/app/accounts'
     | '/app/calendar'
     | '/app/history'
@@ -264,6 +263,7 @@ export interface FileRouteTypes {
     | '/app/insights'
     | '/app/profile'
     | '/app/settings'
+    | '/bill/$id'
     | '/app/bill/$id'
   id:
     | '__root__'
@@ -279,7 +279,6 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/profile'
     | '/settings'
-    | '/bill/'
     | '/app/accounts'
     | '/app/calendar'
     | '/app/history'
@@ -288,6 +287,7 @@ export interface FileRouteTypes {
     | '/app/insights'
     | '/app/profile'
     | '/app/settings'
+    | '/bill/$id'
     | '/app/bill/$id'
   fileRoutesById: FileRoutesById
 }
@@ -304,7 +304,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   ProfileRoute: typeof ProfileRoute
   SettingsRoute: typeof SettingsRoute
-  BillRoute: typeof BillRoute
+  BillIdRoute: typeof BillIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -393,6 +393,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/bill/$id': {
+      id: '/bill/$id'
+      path: '/bill/$id'
+      fullPath: '/bill/$id'
+      preLoaderRoute: typeof BillIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/settings': {
       id: '/app/settings'
       path: '/settings'
@@ -449,13 +456,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAccountsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/bill/': {
-      id: '/bill/'
-      path: '/bill'
-      fullPath: '/bill/'
-      preLoaderRoute: typeof BillRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/app/bill/$id': {
       id: '/app/bill/$id'
       path: '/bill/$id'
@@ -505,8 +505,18 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   ProfileRoute: ProfileRoute,
   SettingsRoute: SettingsRoute,
-  BillRoute: BillRoute,
+  BillIdRoute: BillIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
