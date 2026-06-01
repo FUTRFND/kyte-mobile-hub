@@ -1,0 +1,1 @@
+ALTER TABLE public.accounts ADD CONSTRAINT accounts_user_teller_account_unique UNIQUE (user_id, teller_account_id);
