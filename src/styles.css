@@ -1,5 +1,4 @@
-/* Kyte brand fonts — must precede other @import rules */
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Outfit:wght@300;400;500;600&display=swap");
+/* Kyte brand fonts loaded via <link> in __root.tsx head */
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
