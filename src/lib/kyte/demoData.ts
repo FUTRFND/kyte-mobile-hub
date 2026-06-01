@@ -67,12 +67,10 @@ export async function seedDemoData(): Promise<{
   const userId = u.user.id;
 
   // Wipe previous demo rows so re-seeding stays clean.
-  await Promise.all([
-    supabase.from("bill_payments").delete().eq("user_id", userId).like("amount::text", "%").not("bill_id", "is", null).limit(0), // no-op to satisfy linter pattern
-    supabase.from("transactions").delete().eq("user_id", userId).like("notes", `%${DEMO_TAG}%`),
-    supabase.from("bills").delete().eq("user_id", userId).like("notes", `%${DEMO_TAG}%`),
-    supabase.from("incomes").delete().eq("user_id", userId).like("name", "%— Acme Corp%"),
-  ]);
+  await supabase.from("bill_payments").delete().eq("user_id", userId);
+  await supabase.from("transactions").delete().eq("user_id", userId).like("notes", `%${DEMO_TAG}%`);
+  await supabase.from("bills").delete().eq("user_id", userId).like("notes", `%${DEMO_TAG}%`);
+  await supabase.from("incomes").delete().eq("user_id", userId).in("name", INCOMES.map((i) => i.name));
 
   const today = new Date();
   const billRows = BILLS.map((b) => {
