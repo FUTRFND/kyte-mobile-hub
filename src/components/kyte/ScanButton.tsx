@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { Camera, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { scanImage, type ScanResult } from "@/lib/kyte/ocr";
-import { capturePhoto } from "@/lib/kyte/camera";
+import {
+  capturePhoto,
+  CameraPermissionError,
+  CameraUnavailableError,
+} from "@/lib/kyte/camera";
 import { isNative } from "@/lib/kyte/native";
 
 /**
@@ -24,23 +29,39 @@ export function ScanButton({
   const [busy, setBusy] = useState(false);
 
   const handleClick = async () => {
+    if (busy) return;
     setBusy(true);
+    let previewUrl: string | null = null;
+    const scanToast = toast.loading("Opening camera…");
     try {
       const captured = await capturePhoto(isNative() ? source : "camera");
-      if (!captured) return;
-      try {
-        const result = await scanImage(captured.blob);
-        onResult(result);
-      } finally {
-        // Revoke object URLs we created on web; leave native webPaths alone.
-        if (captured.previewUrl.startsWith("blob:")) {
-          URL.revokeObjectURL(captured.previewUrl);
-        }
+      if (!captured) {
+        toast.dismiss(scanToast);
+        return;
       }
+      previewUrl = captured.previewUrl;
+      toast.loading("Reading bill…", { id: scanToast });
+      const result = await scanImage(captured.blob);
+      toast.success(
+        result.name || result.amount
+          ? `Found ${result.name ?? "bill"}${result.amount ? ` · $${result.amount}` : ""}`
+          : "Scan complete",
+        { id: scanToast },
+      );
+      onResult(result);
     } catch (err) {
-      console.error("OCR failed", err);
-      alert("Couldn't read that image. Try a clearer photo.");
+      if (err instanceof CameraPermissionError) {
+        toast.error(err.message, { id: scanToast });
+      } else if (err instanceof CameraUnavailableError) {
+        toast.error("No camera available on this device.", { id: scanToast });
+      } else {
+        console.error("Scan failed", err);
+        toast.error("Couldn't read that image. Try a clearer photo.", { id: scanToast });
+      }
     } finally {
+      if (previewUrl && previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
+      }
       setBusy(false);
     }
   };
@@ -51,6 +72,7 @@ export function ScanButton({
       onClick={handleClick}
       disabled={busy}
       aria-label="Scan a bill or card with the camera"
+      aria-busy={busy}
       className={`flex h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-foreground transition active:scale-95 disabled:opacity-60 ${className}`}
     >
       {busy ? (
