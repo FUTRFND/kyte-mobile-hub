@@ -31,6 +31,7 @@ import {
 } from "@/lib/kyte/notifications";
 import { downloadFile, toCSV } from "@/lib/kyte/export";
 import { buildMonthlyReport, downloadBlob, lastNMonths } from "@/lib/kyte/report";
+import { seedDemoData } from "@/lib/kyte/demoData";
 
 export const Route = createFileRoute("/app/settings")({
   head: () => ({ meta: [{ title: "Settings — Kyte" }] }),
