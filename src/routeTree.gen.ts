@@ -29,6 +29,7 @@ import { Route as AppHomeRouteImport } from './routes/app.home'
 import { Route as AppHistoryRouteImport } from './routes/app.history'
 import { Route as AppCalendarRouteImport } from './routes/app.calendar'
 import { Route as AppAccountsRouteImport } from './routes/app.accounts'
+import { Route as BillRouteImport } from './routes/bill.'
 import { Route as AppBillIdRouteImport } from './routes/app.bill.$id'
 
 const SettingsRoute = SettingsRouteImport.update({
@@ -131,6 +132,11 @@ const AppAccountsRoute = AppAccountsRouteImport.update({
   path: '/accounts',
   getParentRoute: () => AppRoute,
 } as any)
+const BillRoute = BillRouteImport.update({
+  id: '/bill/',
+  path: '/bill/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppBillIdRoute = AppBillIdRouteImport.update({
   id: '/bill/$id',
   path: '/bill/$id',
@@ -150,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
+  '/bill/': typeof BillRoute
   '/app/accounts': typeof AppAccountsRoute
   '/app/calendar': typeof AppCalendarRoute
   '/app/history': typeof AppHistoryRoute
@@ -173,6 +180,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
+  '/bill': typeof BillRoute
   '/app/accounts': typeof AppAccountsRoute
   '/app/calendar': typeof AppCalendarRoute
   '/app/history': typeof AppHistoryRoute
@@ -197,6 +205,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
+  '/bill/': typeof BillRoute
   '/app/accounts': typeof AppAccountsRoute
   '/app/calendar': typeof AppCalendarRoute
   '/app/history': typeof AppHistoryRoute
@@ -222,6 +231,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/profile'
     | '/settings'
+    | '/bill/'
     | '/app/accounts'
     | '/app/calendar'
     | '/app/history'
@@ -245,6 +255,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/profile'
     | '/settings'
+    | '/bill'
     | '/app/accounts'
     | '/app/calendar'
     | '/app/history'
@@ -268,6 +279,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/profile'
     | '/settings'
+    | '/bill/'
     | '/app/accounts'
     | '/app/calendar'
     | '/app/history'
@@ -292,6 +304,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   ProfileRoute: typeof ProfileRoute
   SettingsRoute: typeof SettingsRoute
+  BillRoute: typeof BillRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -436,6 +449,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAccountsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/bill/': {
+      id: '/bill/'
+      path: '/bill'
+      fullPath: '/bill/'
+      preLoaderRoute: typeof BillRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/bill/$id': {
       id: '/app/bill/$id'
       path: '/bill/$id'
@@ -485,6 +505,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   ProfileRoute: ProfileRoute,
   SettingsRoute: SettingsRoute,
+  BillRoute: BillRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
