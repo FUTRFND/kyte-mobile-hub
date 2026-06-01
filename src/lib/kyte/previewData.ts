@@ -295,19 +295,6 @@ export const previewAccounts: Account[] = [
     updated_at: stamp,
     ...tellerExtras,
   },
-  {
-    id: "account-card",
-    user_id: userId,
-    provider: "teller",
-    institution: "Amex Gold",
-    mask: "1008",
-    status: "active",
-    access_token_encrypted: null,
-    linked_at: stamp,
-    created_at: stamp,
-    updated_at: stamp,
-    ...tellerExtras,
-  },
 ];
 
 export function getPreviewBill(id: string) {
