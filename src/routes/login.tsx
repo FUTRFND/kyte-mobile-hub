@@ -29,10 +29,14 @@ function Login() {
     resolver: zodResolver(schema),
   });
 
-  // Once authenticated (via OAuth redirect or email), bounce into the app.
+  // Only bounce on a fresh sign-in (e.g. OAuth redirect). Ignore INITIAL_SESSION
+  // and TOKEN_REFRESHED so existing sessions don't kick the user off /login
+  // mid-typing if they intentionally navigated here.
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (session) navigate({ to: "/app/home", replace: true });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        navigate({ to: "/app/home", replace: true });
+      }
     });
     return () => subscription.unsubscribe();
   }, [navigate]);
