@@ -20,6 +20,7 @@ import { Route as AppIncomeRouteImport } from './routes/app.income'
 import { Route as AppHomeRouteImport } from './routes/app.home'
 import { Route as AppHistoryRouteImport } from './routes/app.history'
 import { Route as AppCalendarRouteImport } from './routes/app.calendar'
+import { Route as AppAccountsRouteImport } from './routes/app.accounts'
 import { Route as AppBillIdRouteImport } from './routes/app.bill.$id'
 
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -77,6 +78,11 @@ const AppCalendarRoute = AppCalendarRouteImport.update({
   path: '/calendar',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAccountsRoute = AppAccountsRouteImport.update({
+  id: '/accounts',
+  path: '/accounts',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppBillIdRoute = AppBillIdRouteImport.update({
   id: '/bill/$id',
   path: '/bill/$id',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/app/accounts': typeof AppAccountsRoute
   '/app/calendar': typeof AppCalendarRoute
   '/app/history': typeof AppHistoryRoute
   '/app/home': typeof AppHomeRoute
@@ -102,6 +109,7 @@ export interface FileRoutesByTo {
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/app/accounts': typeof AppAccountsRoute
   '/app/calendar': typeof AppCalendarRoute
   '/app/history': typeof AppHistoryRoute
   '/app/home': typeof AppHomeRoute
@@ -117,6 +125,7 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/app/accounts': typeof AppAccountsRoute
   '/app/calendar': typeof AppCalendarRoute
   '/app/history': typeof AppHistoryRoute
   '/app/home': typeof AppHomeRoute
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/login'
     | '/onboarding'
+    | '/app/accounts'
     | '/app/calendar'
     | '/app/history'
     | '/app/home'
@@ -147,6 +157,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/login'
     | '/onboarding'
+    | '/app/accounts'
     | '/app/calendar'
     | '/app/history'
     | '/app/home'
@@ -161,6 +172,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/login'
     | '/onboarding'
+    | '/app/accounts'
     | '/app/calendar'
     | '/app/history'
     | '/app/home'
@@ -257,6 +269,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCalendarRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/accounts': {
+      id: '/app/accounts'
+      path: '/accounts'
+      fullPath: '/app/accounts'
+      preLoaderRoute: typeof AppAccountsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/bill/$id': {
       id: '/app/bill/$id'
       path: '/bill/$id'
@@ -268,6 +287,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppAccountsRoute: typeof AppAccountsRoute
   AppCalendarRoute: typeof AppCalendarRoute
   AppHistoryRoute: typeof AppHistoryRoute
   AppHomeRoute: typeof AppHomeRoute
@@ -279,6 +299,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAccountsRoute: AppAccountsRoute,
   AppCalendarRoute: AppCalendarRoute,
   AppHistoryRoute: AppHistoryRoute,
   AppHomeRoute: AppHomeRoute,
@@ -300,3 +321,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
