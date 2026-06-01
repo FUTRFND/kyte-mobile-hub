@@ -17,6 +17,7 @@ import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppInsightsRouteImport } from './routes/app.insights'
 import { Route as AppHomeRouteImport } from './routes/app.home'
 import { Route as AppCalendarRouteImport } from './routes/app.calendar'
+import { Route as AppBillIdRouteImport } from './routes/app.bill.$id'
 
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
@@ -58,6 +59,11 @@ const AppCalendarRoute = AppCalendarRouteImport.update({
   path: '/calendar',
   getParentRoute: () => AppRoute,
 } as any)
+const AppBillIdRoute = AppBillIdRouteImport.update({
+  id: '/bill/$id',
+  path: '/bill/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -68,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/app/home': typeof AppHomeRoute
   '/app/insights': typeof AppInsightsRoute
   '/app/profile': typeof AppProfileRoute
+  '/app/bill/$id': typeof AppBillIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -78,6 +85,7 @@ export interface FileRoutesByTo {
   '/app/home': typeof AppHomeRoute
   '/app/insights': typeof AppInsightsRoute
   '/app/profile': typeof AppProfileRoute
+  '/app/bill/$id': typeof AppBillIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,6 +97,7 @@ export interface FileRoutesById {
   '/app/home': typeof AppHomeRoute
   '/app/insights': typeof AppInsightsRoute
   '/app/profile': typeof AppProfileRoute
+  '/app/bill/$id': typeof AppBillIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +110,7 @@ export interface FileRouteTypes {
     | '/app/home'
     | '/app/insights'
     | '/app/profile'
+    | '/app/bill/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,6 +121,7 @@ export interface FileRouteTypes {
     | '/app/home'
     | '/app/insights'
     | '/app/profile'
+    | '/app/bill/$id'
   id:
     | '__root__'
     | '/'
@@ -121,6 +132,7 @@ export interface FileRouteTypes {
     | '/app/home'
     | '/app/insights'
     | '/app/profile'
+    | '/app/bill/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -188,6 +200,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCalendarRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/bill/$id': {
+      id: '/app/bill/$id'
+      path: '/bill/$id'
+      fullPath: '/app/bill/$id'
+      preLoaderRoute: typeof AppBillIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
@@ -196,6 +215,7 @@ interface AppRouteChildren {
   AppHomeRoute: typeof AppHomeRoute
   AppInsightsRoute: typeof AppInsightsRoute
   AppProfileRoute: typeof AppProfileRoute
+  AppBillIdRoute: typeof AppBillIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -203,6 +223,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppHomeRoute: AppHomeRoute,
   AppInsightsRoute: AppInsightsRoute,
   AppProfileRoute: AppProfileRoute,
+  AppBillIdRoute: AppBillIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
