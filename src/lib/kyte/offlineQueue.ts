@@ -13,6 +13,10 @@ export type PendingMarkPaid = {
   amount: number;
   paid_on: string;       // ISO date
   period_date: string;   // ISO date
+  // Optional metadata used to auto-post a matching expense transaction
+  // once the queued payment is flushed online.
+  bill_name?: string;
+  bill_category?: string;
   queuedAt: number;
 };
 
@@ -58,8 +62,23 @@ export async function flushPending(): Promise<{ flushed: number; failed: number 
       paid_on: it.paid_on,
       period_date: it.period_date,
     });
-    if (error) remaining.push(it);
-    else flushed++;
+    if (error) {
+      remaining.push(it);
+    } else {
+      flushed++;
+      // Auto-post a matching expense transaction.
+      if (it.bill_name) {
+        await supabase.from("transactions").insert({
+          user_id: it.user_id,
+          name: it.bill_name,
+          amount: it.amount,
+          kind: "expense",
+          category: it.bill_category ?? "Other",
+          occurred_on: it.paid_on,
+          notes: `Bill payment · ${it.bill_name}`,
+        });
+      }
+    }
   }
   write(remaining);
   return { flushed, failed: remaining.length };
