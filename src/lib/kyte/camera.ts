@@ -5,29 +5,98 @@ export type CaptureSource = "camera" | "library" | "prompt";
 export type CapturedImage = {
   /** Always a Blob suitable for passing to OCR / FormData. */
   blob: Blob;
-  /** Object URL for preview; caller is responsible for revoking. */
+  /** Object URL or webPath for preview; caller should revoke blob: URLs. */
   previewUrl: string;
   mimeType: string;
 };
 
+export class CameraPermissionError extends Error {
+  constructor(message = "Camera permission denied") {
+    super(message);
+    this.name = "CameraPermissionError";
+  }
+}
+export class CameraUnavailableError extends Error {
+  constructor(message = "Camera unavailable on this device") {
+    super(message);
+    this.name = "CameraUnavailableError";
+  }
+}
+
 /**
  * Capture a photo using the native Capacitor camera when running on-device,
  * with a transparent fallback to a hidden <input type="file" capture="..."> on web.
+ *
+ * Returns `null` ONLY when the user cancelled. Throws typed errors for permission
+ * or hardware problems so the UI can surface a helpful message.
  */
-export async function capturePhoto(source: CaptureSource = "camera"): Promise<CapturedImage | null> {
+export async function capturePhoto(
+  source: CaptureSource = "camera",
+): Promise<CapturedImage | null> {
   if (isNative()) {
     return captureNative(source);
   }
   return captureWeb(source);
 }
 
-async function captureNative(source: CaptureSource): Promise<CapturedImage | null> {
+async function lightHaptic() {
   try {
-    const [{ Camera, CameraResultType, CameraSource }, haptics] = await Promise.all([
-      import("@capacitor/camera"),
-      import("@capacitor/haptics").catch(() => null),
-    ]);
+    const h = await import("@capacitor/haptics");
+    await h.Haptics?.impact({ style: h.ImpactStyle?.Light ?? ("LIGHT" as never) });
+  } catch {
+    // Haptics is best-effort.
+  }
+}
 
+async function errorHaptic() {
+  try {
+    const h = await import("@capacitor/haptics");
+    await h.Haptics?.notification?.({ type: h.NotificationType?.Warning ?? ("WARNING" as never) });
+  } catch {
+    // ignored
+  }
+}
+
+async function captureNative(source: CaptureSource): Promise<CapturedImage | null> {
+  let CameraMod: typeof import("@capacitor/camera");
+  try {
+    CameraMod = await import("@capacitor/camera");
+  } catch (err) {
+    console.warn("@capacitor/camera unavailable, falling back to web", err);
+    return captureWeb(source);
+  }
+  const { Camera, CameraResultType, CameraSource } = CameraMod;
+
+  // Explicit permission gate — surfaces the iOS/Android prompt up-front
+  // and lets us throw a typed error instead of an opaque native exception.
+  try {
+    const status = await Camera.checkPermissions();
+    const needsCamera = source !== "library" && status.camera !== "granted";
+    const needsPhotos = source !== "camera" && status.photos !== "granted";
+    if (needsCamera || needsPhotos) {
+      const requested = await Camera.requestPermissions({
+        permissions: [
+          ...(needsCamera ? (["camera"] as const) : []),
+          ...(needsPhotos ? (["photos"] as const) : []),
+        ],
+      });
+      if (
+        (needsCamera && requested.camera !== "granted") ||
+        (needsPhotos && requested.photos !== "granted")
+      ) {
+        await errorHaptic();
+        throw new CameraPermissionError(
+          "Kyte needs camera access. Enable it in Settings to scan bills.",
+        );
+      }
+    }
+  } catch (err) {
+    if (err instanceof CameraPermissionError) throw err;
+    // checkPermissions throws on simulators without a camera — try the call anyway.
+    console.warn("Permission check failed, attempting capture", err);
+  }
+
+  try {
     const photo = await Camera.getPhoto({
       quality: 85,
       allowEditing: false,
@@ -39,14 +108,15 @@ async function captureNative(source: CaptureSource): Promise<CapturedImage | nul
           ? CameraSource.Prompt
           : CameraSource.Camera,
       correctOrientation: true,
+      saveToGallery: false,
       presentationStyle: "fullscreen",
       promptLabelHeader: "Scan bill",
+      promptLabelCancel: "Cancel",
       promptLabelPhoto: "Choose from photos",
       promptLabelPicture: "Take photo",
     });
 
-    // Light haptic on successful capture — feels truly native.
-    haptics?.Haptics?.impact({ style: haptics.ImpactStyle?.Light ?? "LIGHT" as never }).catch(() => {});
+    await lightHaptic();
 
     if (!photo.webPath) return null;
     const res = await fetch(photo.webPath);
@@ -57,8 +127,16 @@ async function captureNative(source: CaptureSource): Promise<CapturedImage | nul
       mimeType: blob.type || (photo.format ? `image/${photo.format}` : "image/jpeg"),
     };
   } catch (err) {
-    // User cancelled or permission denied — treat as no-op.
-    if ((err as { message?: string })?.message?.toLowerCase().includes("cancel")) return null;
+    const msg = (err as { message?: string })?.message?.toLowerCase() ?? "";
+    // User cancelled — Capacitor surfaces these as thrown errors.
+    if (msg.includes("cancel") || msg.includes("user denied")) return null;
+    if (msg.includes("permission")) {
+      await errorHaptic();
+      throw new CameraPermissionError();
+    }
+    if (msg.includes("no camera") || msg.includes("unavailable")) {
+      throw new CameraUnavailableError();
+    }
     console.warn("Native camera failed, falling back to web", err);
     return captureWeb(source);
   }
