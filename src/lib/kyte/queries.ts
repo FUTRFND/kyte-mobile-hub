@@ -6,6 +6,7 @@ import type { Bill, Payment } from "./bills";
 export type Income = Database["public"]["Tables"]["incomes"]["Row"];
 export type Transaction = Database["public"]["Tables"]["transactions"]["Row"];
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+export type Account = Database["public"]["Tables"]["accounts"]["Row"];
 
 export const billsQuery = queryOptions({
   queryKey: ["bills"],
@@ -69,5 +70,17 @@ export const profileQuery = queryOptions({
       .maybeSingle();
     if (error) throw error;
     return data;
+  },
+});
+
+export const accountsQuery = queryOptions({
+  queryKey: ["accounts"],
+  queryFn: async (): Promise<Account[]> => {
+    const { data, error } = await supabase
+      .from("accounts")
+      .select("*")
+      .order("linked_at", { ascending: false });
+    if (error) throw error;
+    return data ?? [];
   },
 });
