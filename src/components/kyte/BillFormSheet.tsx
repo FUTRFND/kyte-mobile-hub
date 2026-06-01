@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CATEGORIES, CATEGORY_COLORS, type Bill, type Frequency } from "@/lib/kyte/bills";
+import { ScanButton } from "@/components/kyte/ScanButton";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Required").max(80),
@@ -114,17 +115,27 @@ export function BillFormSheet({
         className="flex max-h-[92vh] w-full flex-col rounded-t-3xl border-t border-border bg-background pb-[env(safe-area-inset-bottom)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-5 pt-4 pb-2">
+        <div className="flex items-center justify-between gap-2 px-5 pt-4 pb-2">
           <h2 className="font-display text-lg font-bold text-foreground">
             {bill ? "Edit bill" : "New bill"}
           </h2>
-          <button
-            onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-surface text-foreground"
-            aria-label="Close"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            {!bill && (
+              <ScanButton
+                onResult={(r) => {
+                  if (r.name) setValue("name", r.name, { shouldDirty: true });
+                  if (typeof r.amount === "number") setValue("amount", r.amount, { shouldDirty: true });
+                }}
+              />
+            )}
+            <button
+              onClick={onClose}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-surface text-foreground"
+              aria-label="Close"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3 overflow-y-auto px-5 pb-5">
