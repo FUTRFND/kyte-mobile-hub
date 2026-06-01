@@ -6,17 +6,31 @@ const TELLER_BASE = "https://api.teller.io";
 let cachedClient: Deno.HttpClient | null = null;
 
 function normalizePem(raw: string, label: "CERTIFICATE" | "PRIVATE KEY"): string {
-  let pem = raw.trim();
-  // Convert literal \n sequences into real newlines (common when pasted into form fields).
-  if (pem.includes("\\n")) pem = pem.replace(/\\n/g, "\n");
-  // If the markers are present but newlines were stripped, rebuild the PEM.
+  let pem = raw.trim().replace(/^['"]|['"]$/g, "");
+  // Convert common escaped newline forms into real newlines.
+  pem = pem.replace(/\\r\\n/g, "\n").replace(/\\n/g, "\n").replace(/\r\n/g, "\n");
+
   const begin = `-----BEGIN ${label}-----`;
   const end = `-----END ${label}-----`;
-  if (pem.includes(begin) && !pem.includes("\n")) {
-    const body = pem.slice(pem.indexOf(begin) + begin.length, pem.indexOf(end)).replace(/\s+/g, "");
+
+  // Some secret forms flatten PEMs into a single line, or keep markers on separate
+  // lines but collapse the base64 body with spaces. Rebuild the PEM body whenever
+  // both markers are present so Deno receives a canonical format.
+  if (pem.includes(begin) && pem.includes(end)) {
+    const start = pem.indexOf(begin) + begin.length;
+    const finish = pem.indexOf(end, start);
+    const body = pem.slice(start, finish).replace(/\s+/g, "");
     const lines = body.match(/.{1,64}/g) ?? [];
     pem = `${begin}\n${lines.join("\n")}\n${end}\n`;
+  } else {
+    // Fallback for secrets stored as raw base64 without PEM markers.
+    const compact = pem.replace(/\s+/g, "");
+    if (compact) {
+      const lines = compact.match(/.{1,64}/g) ?? [];
+      pem = `${begin}\n${lines.join("\n")}\n${end}\n`;
+    }
   }
+
   if (!pem.endsWith("\n")) pem += "\n";
   return pem;
 }
