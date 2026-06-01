@@ -6,7 +6,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -95,9 +95,15 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+  const sessionHydratedRef = useRef(false);
 
   useEffect(() => {
+    supabase.auth.getSession().finally(() => {
+      sessionHydratedRef.current = true;
+    });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      if (!sessionHydratedRef.current) return;
       router.invalidate();
       queryClient.invalidateQueries();
     });
