@@ -64,16 +64,38 @@ function BillDetail() {
       amount: Number(bill.amount),
       paid_on: toISODate(new Date()),
       period_date: toISODate(due),
+      // Used by the offline queue to also auto-post the transaction.
+      bill_name: bill.name,
+      bill_category: bill.category,
     };
     if (typeof navigator !== "undefined" && !navigator.onLine) {
       await enqueueMarkPaid(entry);
     } else {
-      const { error } = await supabase.from("bill_payments").insert(entry);
-      if (error) await enqueueMarkPaid(entry);
+      const { error } = await supabase.from("bill_payments").insert({
+        user_id: entry.user_id,
+        bill_id: entry.bill_id,
+        amount: entry.amount,
+        paid_on: entry.paid_on,
+        period_date: entry.period_date,
+      });
+      if (error) {
+        await enqueueMarkPaid(entry);
+      } else {
+        await supabase.from("transactions").insert({
+          user_id: u.user.id,
+          name: bill.name,
+          amount: Number(bill.amount),
+          kind: "expense",
+          category: bill.category,
+          occurred_on: toISODate(new Date()),
+          notes: `Bill payment · ${bill.name}`,
+        });
+      }
     }
     await flushPending();
     setBusy(false);
     qc.invalidateQueries({ queryKey: ["payments"] });
+    qc.invalidateQueries({ queryKey: ["transactions"] });
   };
 
   const payNow = async () => {
