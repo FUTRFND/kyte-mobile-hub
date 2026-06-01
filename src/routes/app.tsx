@@ -72,7 +72,7 @@ function AppShell() {
         </main>
 
         <nav
-          className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 backdrop-blur"
+          className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/80 backdrop-blur-xl"
           aria-label="Primary"
         >
           <ul className="mx-auto flex max-w-md items-stretch justify-around px-2 pt-2 pb-[calc(env(safe-area-inset-bottom)+8px)]">
@@ -80,12 +80,27 @@ function AppShell() {
               <li key={to} className="flex-1">
                 <Link
                   to={to}
-                  activeProps={{ className: "text-primary", "aria-current": "page" }}
-                  inactiveProps={{ className: "text-muted-foreground" }}
+                  activeProps={{
+                    className: "text-primary [&_.tab-pill]:opacity-100 [&_.tab-dot]:scale-100",
+                    "aria-current": "page",
+                  }}
+                  inactiveProps={{
+                    className: "text-muted-foreground [&_.tab-pill]:opacity-0 [&_.tab-dot]:scale-0",
+                  }}
                   aria-label={label}
-                  className="flex min-h-11 flex-col items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-medium"
+                  className="group relative flex min-h-11 flex-col items-center justify-center gap-0.5 py-1.5 text-[11px] font-semibold transition active:scale-95"
                 >
-                  <Icon className="h-5 w-5" strokeWidth={2} aria-hidden />
+                  <span
+                    className="tab-pill absolute inset-x-3 top-0 h-0.5 rounded-full bg-primary transition-opacity duration-200"
+                    aria-hidden
+                  />
+                  <span className="relative">
+                    <Icon className="h-5 w-5" strokeWidth={2} aria-hidden />
+                    <span
+                      className="tab-dot absolute -bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-primary transition-transform duration-200"
+                      aria-hidden
+                    />
+                  </span>
                   <span>{label}</span>
                 </Link>
               </li>

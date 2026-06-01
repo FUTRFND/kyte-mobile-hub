@@ -76,9 +76,20 @@ function Login() {
   };
 
   return (
-    <main className="flex min-h-dvh flex-col bg-background px-6 safe-top safe-bottom">
-      <div className="flex flex-1 flex-col justify-center">
-        <div className="mb-8 flex flex-col items-center gap-3">
+    <main className="relative flex min-h-dvh flex-col overflow-hidden bg-background px-6 safe-top safe-bottom">
+      {/* Ambient mesh gradient */}
+      <div
+        className="pointer-events-none absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full opacity-30 blur-3xl"
+        style={{ background: "var(--gradient-hero, hsl(var(--primary)))" }}
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute -bottom-40 -right-20 h-72 w-72 rounded-full opacity-20 blur-3xl"
+        style={{ background: "hsl(var(--primary))" }}
+        aria-hidden
+      />
+      <div className="relative flex flex-1 flex-col justify-center">
+        <div className="mb-8 flex flex-col items-center gap-3 animate-fade-in-up">
           <KyteMark size={52} />
           <h1 className="font-display text-2xl font-bold text-foreground">
             {mode === "signin" ? "Welcome back" : "Create your account"}

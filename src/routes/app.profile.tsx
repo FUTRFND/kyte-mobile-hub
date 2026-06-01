@@ -54,13 +54,26 @@ function ProfileTab() {
     <>
       <PageHeader title="Profile" />
 
-      <section className="mx-5 flex flex-col items-center gap-3 rounded-3xl border border-border bg-surface-elevated p-6">
-        <div className="grid h-20 w-20 place-items-center rounded-3xl bg-primary text-2xl font-bold text-primary-foreground">
-          {initials}
+      <section className="relative mx-5 overflow-hidden rounded-3xl border border-border bg-surface-elevated p-6">
+        <div
+          className="pointer-events-none absolute -top-16 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full opacity-40 blur-3xl"
+          style={{ background: "var(--gradient-hero, hsl(var(--primary)))" }}
+          aria-hidden
+        />
+        <div className="relative flex flex-col items-center gap-3">
+          <div
+            className="grid h-20 w-20 place-items-center rounded-3xl text-2xl font-bold text-primary-foreground shadow-glow"
+            style={{ background: "var(--gradient-hero, hsl(var(--primary)))" }}
+          >
+            {initials}
+          </div>
+          <p className="font-display text-lg font-bold text-foreground">
+            {profile?.display_name ?? "Kyte user"}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {profile?.currency ?? "USD"} · member
+          </p>
         </div>
-        <p className="font-display text-lg font-bold text-foreground">
-          {profile?.display_name ?? "Kyte user"}
-        </p>
       </section>
 
       <section className="mt-6 px-5">
