@@ -13,9 +13,12 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppInsightsRouteImport } from './routes/app.insights'
+import { Route as AppIncomeRouteImport } from './routes/app.income'
 import { Route as AppHomeRouteImport } from './routes/app.home'
+import { Route as AppHistoryRouteImport } from './routes/app.history'
 import { Route as AppCalendarRouteImport } from './routes/app.calendar'
 import { Route as AppBillIdRouteImport } from './routes/app.bill.$id'
 
@@ -39,6 +42,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProfileRoute = AppProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -49,9 +57,19 @@ const AppInsightsRoute = AppInsightsRouteImport.update({
   path: '/insights',
   getParentRoute: () => AppRoute,
 } as any)
+const AppIncomeRoute = AppIncomeRouteImport.update({
+  id: '/income',
+  path: '/income',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppHomeRoute = AppHomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppHistoryRoute = AppHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
   getParentRoute: () => AppRoute,
 } as any)
 const AppCalendarRoute = AppCalendarRouteImport.update({
@@ -71,9 +89,12 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/app/calendar': typeof AppCalendarRoute
+  '/app/history': typeof AppHistoryRoute
   '/app/home': typeof AppHomeRoute
+  '/app/income': typeof AppIncomeRoute
   '/app/insights': typeof AppInsightsRoute
   '/app/profile': typeof AppProfileRoute
+  '/app/settings': typeof AppSettingsRoute
   '/app/bill/$id': typeof AppBillIdRoute
 }
 export interface FileRoutesByTo {
@@ -82,9 +103,12 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/app/calendar': typeof AppCalendarRoute
+  '/app/history': typeof AppHistoryRoute
   '/app/home': typeof AppHomeRoute
+  '/app/income': typeof AppIncomeRoute
   '/app/insights': typeof AppInsightsRoute
   '/app/profile': typeof AppProfileRoute
+  '/app/settings': typeof AppSettingsRoute
   '/app/bill/$id': typeof AppBillIdRoute
 }
 export interface FileRoutesById {
@@ -94,9 +118,12 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/app/calendar': typeof AppCalendarRoute
+  '/app/history': typeof AppHistoryRoute
   '/app/home': typeof AppHomeRoute
+  '/app/income': typeof AppIncomeRoute
   '/app/insights': typeof AppInsightsRoute
   '/app/profile': typeof AppProfileRoute
+  '/app/settings': typeof AppSettingsRoute
   '/app/bill/$id': typeof AppBillIdRoute
 }
 export interface FileRouteTypes {
@@ -107,9 +134,12 @@ export interface FileRouteTypes {
     | '/login'
     | '/onboarding'
     | '/app/calendar'
+    | '/app/history'
     | '/app/home'
+    | '/app/income'
     | '/app/insights'
     | '/app/profile'
+    | '/app/settings'
     | '/app/bill/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -118,9 +148,12 @@ export interface FileRouteTypes {
     | '/login'
     | '/onboarding'
     | '/app/calendar'
+    | '/app/history'
     | '/app/home'
+    | '/app/income'
     | '/app/insights'
     | '/app/profile'
+    | '/app/settings'
     | '/app/bill/$id'
   id:
     | '__root__'
@@ -129,9 +162,12 @@ export interface FileRouteTypes {
     | '/login'
     | '/onboarding'
     | '/app/calendar'
+    | '/app/history'
     | '/app/home'
+    | '/app/income'
     | '/app/insights'
     | '/app/profile'
+    | '/app/settings'
     | '/app/bill/$id'
   fileRoutesById: FileRoutesById
 }
@@ -172,6 +208,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/settings': {
+      id: '/app/settings'
+      path: '/settings'
+      fullPath: '/app/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/profile': {
       id: '/app/profile'
       path: '/profile'
@@ -186,11 +229,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppInsightsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/income': {
+      id: '/app/income'
+      path: '/income'
+      fullPath: '/app/income'
+      preLoaderRoute: typeof AppIncomeRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/home': {
       id: '/app/home'
       path: '/home'
       fullPath: '/app/home'
       preLoaderRoute: typeof AppHomeRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/history': {
+      id: '/app/history'
+      path: '/history'
+      fullPath: '/app/history'
+      preLoaderRoute: typeof AppHistoryRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/calendar': {
@@ -212,17 +269,23 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppCalendarRoute: typeof AppCalendarRoute
+  AppHistoryRoute: typeof AppHistoryRoute
   AppHomeRoute: typeof AppHomeRoute
+  AppIncomeRoute: typeof AppIncomeRoute
   AppInsightsRoute: typeof AppInsightsRoute
   AppProfileRoute: typeof AppProfileRoute
+  AppSettingsRoute: typeof AppSettingsRoute
   AppBillIdRoute: typeof AppBillIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppCalendarRoute: AppCalendarRoute,
+  AppHistoryRoute: AppHistoryRoute,
   AppHomeRoute: AppHomeRoute,
+  AppIncomeRoute: AppIncomeRoute,
   AppInsightsRoute: AppInsightsRoute,
   AppProfileRoute: AppProfileRoute,
+  AppSettingsRoute: AppSettingsRoute,
   AppBillIdRoute: AppBillIdRoute,
 }
 

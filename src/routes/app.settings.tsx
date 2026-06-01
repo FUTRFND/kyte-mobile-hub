@@ -52,7 +52,12 @@ function SettingsPage() {
     setLeadDays(profile.reminder_days_default);
   }, [profile]);
 
-  const patch = async (p: Record<string, unknown>) => {
+  type ProfilePatch = Partial<{
+    monthly_budget: number | null;
+    reminder_days_default: number;
+    biometric_enabled: boolean;
+  }>;
+  const patch = async (p: ProfilePatch) => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
     await supabase.from("profiles").update(p).eq("user_id", u.user.id);
