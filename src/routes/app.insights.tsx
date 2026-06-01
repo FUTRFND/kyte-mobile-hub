@@ -115,9 +115,10 @@ function InsightsTab() {
       <section className="mx-5 grid grid-cols-2 gap-3">
         <div className="rounded-2xl border border-border bg-surface-elevated p-4">
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground">This month</p>
-          <p className="mt-1 font-display text-2xl font-bold text-foreground">
+          <p className="mt-1 font-display text-2xl font-bold text-gradient-primary">
             {formatMoney(data.thisMonth, currency)}
           </p>
+          <span className="hidden">{/* anchor */}</span>
           <p
             className={`mt-1 flex items-center gap-1 text-xs font-semibold ${
               data.mom > 0 ? "text-destructive" : data.mom < 0 ? "text-success" : "text-muted-foreground"
@@ -145,7 +146,7 @@ function InsightsTab() {
           {data.last6.map((m) => (
             <div key={m.key} className="flex flex-1 flex-col items-center gap-1.5">
               <div
-                className="w-full rounded-t-md bg-primary/80"
+                className="w-full rounded-t-md bg-gradient-primary shadow-glow"
                 style={{ height: `${(m.amount / maxBar) * 100}%`, minHeight: 2 }}
               />
               <span className="text-[10px] text-muted-foreground">{m.label}</span>
