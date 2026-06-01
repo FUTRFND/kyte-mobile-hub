@@ -19,6 +19,7 @@ import {
   occurrencesInRange,
 } from "@/lib/kyte/bills";
 import { AnimatedMoney, Sparkline } from "@/lib/kyte/animated";
+import { SmartBillSuggestions } from "@/components/kyte/SmartBillSuggestions";
 
 export const Route = createFileRoute("/app/home")({
   head: () => ({ meta: [{ title: "Home — Kyte" }] }),
@@ -272,6 +273,9 @@ function HomeTab() {
           </ul>
         </section>
       )}
+
+      {/* Smart bill detection */}
+      <SmartBillSuggestions currency={currency} />
 
       {/* Upcoming bills */}
       <section className="mt-6 px-5 pb-6 animate-fade-in-up">
