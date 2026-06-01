@@ -76,12 +76,24 @@ export function BillFormSheet({
       color: CATEGORY_COLORS[v.category] ?? "#0098FF",
       notes: v.notes || null,
     };
+    let saved = null;
     if (bill) {
-      await supabase.from("bills").update(payload).eq("id", bill.id);
+      const { data } = await supabase.from("bills").update(payload).eq("id", bill.id).select().single();
+      saved = data;
     } else {
-      await supabase.from("bills").insert(payload);
+      const { data } = await supabase.from("bills").insert(payload).select().single();
+      saved = data;
     }
     qc.invalidateQueries({ queryKey: ["bills"] });
+    if (saved) {
+      const { scheduleBillReminder } = await import("@/lib/kyte/notifications");
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("reminder_days_default")
+        .eq("user_id", u.user.id)
+        .maybeSingle();
+      void scheduleBillReminder(saved, prof?.reminder_days_default ?? 2);
+    }
     onClose();
   };
 
