@@ -110,6 +110,7 @@ function ProfileTab() {
         <div className="overflow-hidden rounded-2xl border border-border bg-surface-elevated">
           <NavLink to="/app/history" icon={History} label="Transaction history" />
           <NavLink to="/app/income" icon={Wallet} label="Income sources" />
+          <NavLink to="/app/accounts" icon={Landmark} label="Linked banks" />
           <NavLink to="/app/settings" icon={Settings} label="Settings & security" />
         </div>
       </section>
