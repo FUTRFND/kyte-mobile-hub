@@ -274,6 +274,9 @@ function HomeTab() {
         </section>
       )}
 
+      {/* Smart bill detection */}
+      <SmartBillSuggestions currency={currency} />
+
       {/* Upcoming bills */}
       <section className="mt-6 px-5 pb-6 animate-fade-in-up">
         <div className="mb-3 flex items-baseline justify-between">
