@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CATEGORIES, CATEGORY_COLORS, type Bill, type Frequency } from "@/lib/kyte/bills";
+import { ScanButton } from "@/components/kyte/ScanButton";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Required").max(80),
