@@ -22,6 +22,9 @@ const tabs: Tab[] = [
 ];
 
 function AppShell() {
+  useEffect(() => {
+    installOfflineQueue();
+  }, []);
   return (
     <BiometricGate>
       <div className="flex min-h-screen flex-col bg-background safe-top">
