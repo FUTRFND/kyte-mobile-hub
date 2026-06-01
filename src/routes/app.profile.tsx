@@ -132,7 +132,7 @@ function NavLink({
   icon: Icon,
   label,
 }: {
-  to: "/app/history" | "/app/income" | "/app/settings";
+  to: "/app/history" | "/app/income" | "/app/accounts" | "/app/settings";
   icon: React.ComponentType<{ className?: string }>;
   label: string;
 }) {
