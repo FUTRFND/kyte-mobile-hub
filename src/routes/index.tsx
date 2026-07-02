@@ -11,7 +11,7 @@ function Splash() {
   const [hold, setHold] = useState(true);
 
   useEffect(() => {
-    const t = setTimeout(() => setHold(false), 900);
+    const t = setTimeout(() => setHold(false), 500);
     return () => clearTimeout(t);
   }, []);
 
@@ -19,9 +19,11 @@ function Splash() {
     if (hold) return;
     let cancelled = false;
     (async () => {
-      const { data } = await supabase.auth.getSession();
+      const sessionPromise = supabase.auth.getSession().then((r) => r.data.session);
+      const timeout = new Promise<null>((res) => setTimeout(() => res(null), 1200));
+      const session = await Promise.race([sessionPromise, timeout]);
       if (cancelled) return;
-      if (data.session) {
+      if (session) {
         navigate({ to: "/app/home", replace: true });
       } else {
         const seen = typeof window !== "undefined" && localStorage.getItem("kyte.onboarded") === "1";
