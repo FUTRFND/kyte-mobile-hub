@@ -19,15 +19,25 @@ function Splash() {
     if (hold) return;
     let cancelled = false;
     (async () => {
-      const sessionPromise = supabase.auth.getSession().then((r) => r.data.session);
-      const timeout = new Promise<null>((res) => setTimeout(() => res(null), 1200));
-      const session = await Promise.race([sessionPromise, timeout]);
+      let session: unknown = null;
+      try {
+        const sessionPromise = supabase.auth.getSession().then((r) => r.data.session).catch(() => null);
+        const timeout = new Promise<null>((res) => setTimeout(() => res(null), 1200));
+        session = await Promise.race([sessionPromise, timeout]);
+      } catch {
+        session = null;
+      }
       if (cancelled) return;
-      if (session) {
-        navigate({ to: "/app/home", replace: true });
-      } else {
-        const seen = typeof window !== "undefined" && localStorage.getItem("kyte.onboarded") === "1";
-        navigate({ to: seen ? "/login" : "/onboarding", replace: true });
+      try {
+        if (session) {
+          navigate({ to: "/app/home", replace: true });
+        } else {
+          const seen = typeof window !== "undefined" && localStorage.getItem("kyte.onboarded") === "1";
+          navigate({ to: seen ? "/login" : "/onboarding", replace: true });
+        }
+      } catch (err) {
+        console.error("[splash] navigate failed", err);
+        navigate({ to: "/onboarding", replace: true });
       }
     })();
     return () => { cancelled = true; };
