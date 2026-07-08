@@ -1,42 +1,81 @@
 // Capacitor / SPA entry. Bootstraps the same file-based route tree as the
 // TanStack Start preview, but mounted in CSR mode — no SSR, no server fns.
+//
+// Hardened for native WebViews: any throw during boot (bad Supabase env,
+// plugin init failure, missing asset, storage exception) surfaces as a
+// visible error screen instead of a silent black WebView.
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RouterProvider, createRouter } from "@tanstack/react-router";
-import { routeTree } from "./routeTree.gen";
-import { supabase } from "./integrations/supabase/client";
 import "./styles.css";
 
-const queryClient = new QueryClient({
-  defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
-});
+const rootEl = document.getElementById("root");
 
-const router = createRouter({
-  routeTree,
-  context: { queryClient },
-  defaultPreload: "intent",
-  defaultPreloadStaleTime: 0,
-  scrollRestoration: true,
-});
-
-declare module "@tanstack/react-router" {
-  interface Register {
-    router: typeof router;
-  }
+function paintFatal(title: string, detail: string) {
+  const target = rootEl ?? document.body;
+  if (!target) return;
+  target.innerHTML = `
+    <div style="min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px;background:#0B0B0D;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+      <div style="max-width:420px;text-align:center;">
+        <div style="font-size:20px;font-weight:700;margin-bottom:8px;">${title}</div>
+        <div style="font-size:13px;opacity:.7;white-space:pre-wrap;word-break:break-word;">${detail}</div>
+        <button onclick="location.reload()" style="margin-top:20px;padding:10px 22px;border-radius:10px;background:#0098FF;color:#0B0B0D;font-weight:700;border:0;font-size:14px;">Reload</button>
+      </div>
+    </div>`;
 }
 
-// Keep TanStack Query cache and route data in sync with Supabase auth state.
-supabase.auth.onAuthStateChange(() => {
-  router.invalidate();
-  queryClient.invalidateQueries();
+// Global safety nets — a throw before React mounts otherwise leaves a black WebView.
+window.addEventListener("error", (e) => {
+  console.error("[boot] window.error", e.error ?? e.message);
+  if (rootEl && !rootEl.firstChild) paintFatal("Something went wrong", String(e.error?.stack || e.message || e));
+});
+window.addEventListener("unhandledrejection", (e) => {
+  console.error("[boot] unhandledrejection", e.reason);
+  if (rootEl && !rootEl.firstChild) paintFatal("Something went wrong", String(e.reason?.stack || e.reason || "Unknown error"));
 });
 
-const rootEl = document.getElementById("root")!;
-createRoot(rootEl).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
-  </StrictMode>,
-);
+async function boot() {
+  if (!rootEl) throw new Error("#root element missing from index.html");
+
+  const [{ QueryClient, QueryClientProvider }, { RouterProvider, createRouter }, routeMod, supaMod] = await Promise.all([
+    import("@tanstack/react-query"),
+    import("@tanstack/react-router"),
+    import("./routeTree.gen"),
+    import("./integrations/supabase/client"),
+  ]);
+
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
+  });
+
+  const router = createRouter({
+    routeTree: routeMod.routeTree,
+    context: { queryClient },
+    defaultPreload: "intent",
+    defaultPreloadStaleTime: 0,
+    scrollRestoration: true,
+  });
+
+  // Keep TanStack Query + router in sync with Supabase auth (best-effort).
+  try {
+    supaMod.supabase.auth.onAuthStateChange((event) => {
+      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      router.invalidate();
+      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+    });
+  } catch (err) {
+    console.warn("[boot] supabase auth listener failed", err);
+  }
+
+  createRoot(rootEl).render(
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    </StrictMode>,
+  );
+}
+
+boot().catch((err) => {
+  console.error("[boot] fatal", err);
+  paintFatal("Kyte failed to start", String(err?.stack || err?.message || err));
+});
