@@ -9,10 +9,35 @@
     <title>Kyte</title>
     <style>
       html, body, #root { background: #0B0B0D; color: #fff; margin: 0; min-height: 100vh; }
+      #boot-fallback { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; padding: 24px; text-align: center; }
+      #boot-fallback .brand { width: 56px; height: 56px; border-radius: 16px; background: #0098FF; margin: 0 auto 16px; }
+      #boot-fallback .title { font-size: 18px; font-weight: 700; }
+      #boot-fallback .sub { font-size: 13px; opacity: .6; margin-top: 6px; }
     </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Fallback shown if the JS bundle fails to load or parse. React removes this on mount. -->
+      <div id="boot-fallback">
+        <div>
+          <div class="brand"></div>
+          <div class="title">Kyte</div>
+          <div class="sub">Loading…</div>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.mobile.tsx"></script>
+    <script>
+      // If the module script never executes (parse error, missing asset under the app scheme),
+      // show a recoverable error state after 8s instead of an indefinite black/loading screen.
+      setTimeout(function () {
+        var fb = document.getElementById("boot-fallback");
+        if (!fb) return; // React already mounted
+        fb.innerHTML = '<div><div class="title">Kyte failed to start</div>' +
+          '<div class="sub">The app bundle didn\'t load. Please reopen the app.</div>' +
+          '<button onclick="location.reload()" style="margin-top:20px;padding:10px 22px;border-radius:10px;background:#0098FF;color:#0B0B0D;font-weight:700;border:0;font-size:14px;">Reload</button></div>';
+      }, 8000);
+    </script>
   </body>
 </html>
