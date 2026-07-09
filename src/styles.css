@@ -159,9 +159,10 @@
     background-image: var(--gradient-surface);
     border: 1px solid var(--border);
     box-shadow: var(--shadow-card);
+  }
+
   .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
-}
 
   .glow-ring::before {
     content: "";
