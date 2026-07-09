@@ -11,6 +11,12 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
+import { installGlobalDiagnosticHandlers, recordDiagnostic } from "./mobile/diagnostics";
+import { DiagnosticsOverlay } from "./mobile/DiagnosticsOverlay";
+import { DiagnosticsBoundary } from "./mobile/DiagnosticsBoundary";
+
+installGlobalDiagnosticHandlers();
+
 
 const rootEl = document.getElementById("root");
 
