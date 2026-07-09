@@ -78,6 +78,7 @@ async function configureNativeKeyboard() {
 window.addEventListener("error", (e) => {
   if (isBenignError(e)) return;
   console.error("[boot] window.error", e.error ?? e.message);
+  recordDiagnostic("window.error", e.error ?? { message: e.message });
   if (!reactMounted && rootEl) {
     paintFatal("Something went wrong", String(e.error?.stack || e.message || e));
   }
@@ -85,10 +86,12 @@ window.addEventListener("error", (e) => {
 window.addEventListener("unhandledrejection", (e) => {
   if (isBenignError(e)) return;
   console.error("[boot] unhandledrejection", e.reason);
+  recordDiagnostic("unhandledrejection", e.reason);
   if (!reactMounted && rootEl) {
     paintFatal("Something went wrong", String(e.reason?.stack || e.reason || "Unknown error"));
   }
 });
+
 
 async function boot() {
   if (!rootEl) throw new Error("#root element missing from index.html");
