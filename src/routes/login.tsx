@@ -1,7 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -22,41 +20,65 @@ export const Route = createFileRoute("/login")({
 function Login() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [values, setValues] = useState<FormValues>({ email: "", password: "" });
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof FormValues, string>>>({});
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
-    resolver: zodResolver(schema),
-  });
 
   useEffect(() => {
     let active = true;
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (active && data.session) {
-        navigate({ to: "/app/home", replace: true });
-      }
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (active && data.session) {
+          navigate({ to: "/app/home", replace: true });
+        }
+      })
+      .catch((err) => {
+        console.warn("[login] session check failed", err);
+      });
 
     return () => {
       active = false;
     };
   }, [navigate]);
 
-  const onSubmit = async (values: FormValues) => {
+  const setField = (field: keyof FormValues, value: string) => {
+    setValues((current) => ({ ...current, [field]: value }));
+    setFieldErrors((current) => ({ ...current, [field]: undefined }));
+    setError(null);
+  };
+
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setSubmitting(true);
     setError(null);
+    setFieldErrors({});
+
+    const parsed = schema.safeParse(values);
+    if (!parsed.success) {
+      const nextErrors: Partial<Record<keyof FormValues, string>> = {};
+      for (const issue of parsed.error.issues) {
+        const key = issue.path[0] as keyof FormValues | undefined;
+        if (key && !nextErrors[key]) nextErrors[key] = issue.message;
+      }
+      setFieldErrors(nextErrors);
+      setSubmitting(false);
+      return;
+    }
+
     try {
       if (mode === "signup") {
         const { data, error } = await supabase.auth.signUp({
-          email: values.email,
-          password: values.password,
+          email: parsed.data.email,
+          password: parsed.data.password,
           options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
         if (data.session) navigate({ to: "/app/home", replace: true });
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword(values);
+        const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
         if (error) throw error;
         if (data.session) navigate({ to: "/app/home", replace: true });
       }
@@ -120,34 +142,46 @@ function Login() {
           <span className="h-px flex-1 bg-border" />
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
+        <form onSubmit={onSubmit} className="flex flex-col gap-3" noValidate>
           <div>
-            <label className="text-xs font-medium text-muted-foreground">Email</label>
+            <label htmlFor="kyte-email" className="text-xs font-medium text-muted-foreground">Email</label>
             <div className="mt-1 flex items-center gap-2 rounded-xl border border-input bg-surface px-3">
               <Mail className="h-4 w-4 text-muted-foreground" />
               <input
-                type="email"
+                id="kyte-email"
+                name="email"
+                type="text"
                 inputMode="email"
                 autoCapitalize="none"
-                autoComplete="email"
-                className="h-12 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+                autoCorrect="off"
+                autoComplete="username"
+                spellCheck={false}
+                enterKeyHint="next"
+                value={values.email}
+                onChange={(event) => setField("email", event.currentTarget.value)}
+                onInput={(event) => setField("email", event.currentTarget.value)}
+                className="h-12 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
                 placeholder="you@kyte.app"
-                {...register("email")}
               />
             </div>
-            {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
+            {fieldErrors.email && <p className="mt-1 text-xs text-destructive">{fieldErrors.email}</p>}
           </div>
 
           <div>
-            <label className="text-xs font-medium text-muted-foreground">Password</label>
+            <label htmlFor="kyte-password" className="text-xs font-medium text-muted-foreground">Password</label>
             <input
+              id="kyte-password"
+              name="password"
               type="password"
               autoComplete={mode === "signup" ? "new-password" : "current-password"}
-              className="mt-1 h-12 w-full rounded-xl border border-input bg-surface px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground"
+              enterKeyHint="go"
+              value={values.password}
+              onChange={(event) => setField("password", event.currentTarget.value)}
+              onInput={(event) => setField("password", event.currentTarget.value)}
+              className="mt-1 h-12 w-full rounded-xl border border-input bg-surface px-3 text-base text-foreground outline-none placeholder:text-muted-foreground"
               placeholder="At least 8 characters"
-              {...register("password")}
             />
-            {errors.password && <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>}
+            {fieldErrors.password && <p className="mt-1 text-xs text-destructive">{fieldErrors.password}</p>}
           </div>
 
           {error && (

@@ -37,12 +37,21 @@ function AppShell() {
       setAuthReady(true);
     });
 
-    supabase.auth.getSession().then(({ data }) => {
+    (async () => {
+      const sessionCheck = supabase.auth
+        .getSession()
+        .then(({ data }) => Boolean(data.session))
+        .catch((err) => {
+          console.warn("[app] session check failed", err);
+          return false;
+        });
+      const timeout = new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 2500));
+      const hasSessionNow = await Promise.race([sessionCheck, timeout]);
       if (!active) return;
       sessionHydratedRef.current = true;
-      setHasSession(Boolean(data.session));
+      setHasSession(hasSessionNow);
       setAuthReady(true);
-    });
+    })();
 
     return () => {
       active = false;

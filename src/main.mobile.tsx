@@ -52,6 +52,21 @@ function isBenignError(payload: unknown): boolean {
   );
 }
 
+async function configureNativeKeyboard() {
+  // Keep this best-effort: a missing/unavailable native plugin must never block
+  // React from mounting or turn into a startup fatal screen.
+  try {
+    // @ts-expect-error — injected by Capacitor on-device
+    const cap = window.Capacitor;
+    if (!cap?.isNativePlatform?.()) return;
+    const { Keyboard, KeyboardResize, KeyboardStyle } = await import("@capacitor/keyboard");
+    await Keyboard.setResizeMode({ mode: KeyboardResize.Body });
+    await Keyboard.setStyle({ style: KeyboardStyle.Dark });
+  } catch (err) {
+    console.warn("[boot] native keyboard configuration skipped", err);
+  }
+}
+
 // Global safety nets — pre-mount throws paint the fatal card, post-mount
 // throws are logged only. iOS keyboard-focus noise is filtered.
 window.addEventListener("error", (e) => {
@@ -101,6 +116,8 @@ async function boot() {
   } catch (err) {
     console.warn("[boot] supabase auth listener failed", err);
   }
+
+  void configureNativeKeyboard();
 
   createRoot(rootEl).render(
     <StrictMode>

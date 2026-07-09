@@ -100,16 +100,27 @@ function RootComponent() {
   const sessionHydratedRef = useRef(false);
 
   useEffect(() => {
-    supabase.auth.getSession().finally(() => {
-      sessionHydratedRef.current = true;
-    });
+    let active = true;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+    supabase.auth
+      .getSession()
+      .catch((err) => {
+        console.warn("[root] session hydration failed", err);
+      })
+      .finally(() => {
+        if (active) sessionHydratedRef.current = true;
+      });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (!sessionHydratedRef.current) return;
+      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
-      queryClient.invalidateQueries();
+      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
     });
-    return () => subscription.unsubscribe();
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
   }, [router, queryClient]);
 
   return (
