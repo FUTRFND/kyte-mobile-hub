@@ -1,14 +1,22 @@
 // Capacitor / SPA entry. Bootstraps the same file-based route tree as the
 // TanStack Start preview, but mounted in CSR mode — no SSR, no server fns.
 //
-// Hardened for native WebViews: any throw during boot (bad Supabase env,
-// plugin init failure, missing asset, storage exception) surfaces as a
-// visible error screen instead of a silent black WebView.
+// Hardened for native WebViews:
+// - A throw BEFORE React mounts surfaces as a visible error card, not a
+//   silent black WebView.
+// - A throw AFTER React mounts is logged but NEVER wipes the app. iOS
+//   WebViews emit benign errors on keyboard focus (ResizeObserver loop,
+//   cross-origin script errors from autofill, Capacitor Keyboard plugin
+//   promise rejections). Wiping #root on those looks like an app crash.
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 
 const rootEl = document.getElementById("root");
+
+// Flipped to true the moment React commits its first render. After that,
+// no global error handler is allowed to touch the DOM.
+let reactMounted = false;
 
 function paintFatal(title: string, detail: string) {
   const target = rootEl ?? document.body;
@@ -23,14 +31,42 @@ function paintFatal(title: string, detail: string) {
     </div>`;
 }
 
-// Global safety nets — a throw before React mounts otherwise leaves a black WebView.
+// Benign errors iOS WebView / Capacitor fire routinely — especially on input
+// focus when the software keyboard opens and layout reflows. Never treat
+// these as fatal.
+function isBenignError(payload: unknown): boolean {
+  const msg = String(
+    (payload as { message?: string; reason?: unknown })?.message ??
+      (payload as { reason?: unknown })?.reason ??
+      payload ??
+      "",
+  ).toLowerCase();
+  return (
+    !msg ||
+    msg === "null" ||
+    msg === "undefined" ||
+    msg.includes("resizeobserver") ||
+    msg.includes("non-error promise rejection") ||
+    msg.includes("script error") ||
+    msg.includes("load failed") // WKWebView network noise
+  );
+}
+
+// Global safety nets — pre-mount throws paint the fatal card, post-mount
+// throws are logged only. iOS keyboard-focus noise is filtered.
 window.addEventListener("error", (e) => {
+  if (isBenignError(e)) return;
   console.error("[boot] window.error", e.error ?? e.message);
-  if (rootEl && !rootEl.firstChild) paintFatal("Something went wrong", String(e.error?.stack || e.message || e));
+  if (!reactMounted && rootEl) {
+    paintFatal("Something went wrong", String(e.error?.stack || e.message || e));
+  }
 });
 window.addEventListener("unhandledrejection", (e) => {
+  if (isBenignError(e)) return;
   console.error("[boot] unhandledrejection", e.reason);
-  if (rootEl && !rootEl.firstChild) paintFatal("Something went wrong", String(e.reason?.stack || e.reason || "Unknown error"));
+  if (!reactMounted && rootEl) {
+    paintFatal("Something went wrong", String(e.reason?.stack || e.reason || "Unknown error"));
+  }
 });
 
 async function boot() {
@@ -73,6 +109,12 @@ async function boot() {
       </QueryClientProvider>
     </StrictMode>,
   );
+
+  // Mark mounted on the next frame — by then React has committed and the
+  // boot-fallback is gone. Any error after this point must not wipe the UI.
+  requestAnimationFrame(() => {
+    reactMounted = true;
+  });
 }
 
 boot().catch((err) => {
