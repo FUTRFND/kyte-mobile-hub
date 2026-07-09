@@ -149,5 +149,7 @@ async function boot() {
 
 boot().catch((err) => {
   console.error("[boot] fatal", err);
+  recordDiagnostic("boot.fatal", err);
   paintFatal("Kyte failed to start", String(err?.stack || err?.message || err));
+
 });
