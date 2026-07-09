@@ -11,6 +11,12 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
+import { installGlobalDiagnosticHandlers, recordDiagnostic } from "./mobile/diagnostics";
+import { DiagnosticsOverlay } from "./mobile/DiagnosticsOverlay";
+import { DiagnosticsBoundary } from "./mobile/DiagnosticsBoundary";
+
+installGlobalDiagnosticHandlers();
+
 
 const rootEl = document.getElementById("root");
 
@@ -72,6 +78,7 @@ async function configureNativeKeyboard() {
 window.addEventListener("error", (e) => {
   if (isBenignError(e)) return;
   console.error("[boot] window.error", e.error ?? e.message);
+  recordDiagnostic("window.error", e.error ?? { message: e.message });
   if (!reactMounted && rootEl) {
     paintFatal("Something went wrong", String(e.error?.stack || e.message || e));
   }
@@ -79,10 +86,12 @@ window.addEventListener("error", (e) => {
 window.addEventListener("unhandledrejection", (e) => {
   if (isBenignError(e)) return;
   console.error("[boot] unhandledrejection", e.reason);
+  recordDiagnostic("unhandledrejection", e.reason);
   if (!reactMounted && rootEl) {
     paintFatal("Something went wrong", String(e.reason?.stack || e.reason || "Unknown error"));
   }
 });
+
 
 async function boot() {
   if (!rootEl) throw new Error("#root element missing from index.html");
@@ -122,10 +131,14 @@ async function boot() {
   createRoot(rootEl).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
+        <DiagnosticsBoundary>
+          <RouterProvider router={router} />
+        </DiagnosticsBoundary>
+        <DiagnosticsOverlay />
       </QueryClientProvider>
     </StrictMode>,
   );
+
 
   // Mark mounted on the next frame — by then React has committed and the
   // boot-fallback is gone. Any error after this point must not wipe the UI.
@@ -136,5 +149,7 @@ async function boot() {
 
 boot().catch((err) => {
   console.error("[boot] fatal", err);
+  recordDiagnostic("boot.fatal", err);
   paintFatal("Kyte failed to start", String(err?.stack || err?.message || err));
+
 });
