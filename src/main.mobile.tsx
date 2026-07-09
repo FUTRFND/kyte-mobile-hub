@@ -131,10 +131,14 @@ async function boot() {
   createRoot(rootEl).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
+        <DiagnosticsBoundary>
+          <RouterProvider router={router} />
+        </DiagnosticsBoundary>
+        <DiagnosticsOverlay />
       </QueryClientProvider>
     </StrictMode>,
   );
+
 
   // Mark mounted on the next frame — by then React has committed and the
   // boot-fallback is gone. Any error after this point must not wipe the UI.
