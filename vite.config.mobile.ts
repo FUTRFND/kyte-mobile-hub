@@ -15,10 +15,7 @@ export default defineConfig({
   plugins: [
     tanstackRouter({
       target: "react",
-      // Native iOS WKWebView has been failing before React mounts. Keep the
-      // mobile app as one JS bundle so startup does not depend on runtime
-      // dynamic route chunks resolving under the Capacitor app scheme.
-      autoCodeSplitting: false,
+      autoCodeSplitting: true,
       routesDirectory: "src/routes",
       generatedRouteTree: "src/routeTree.gen.ts",
     }),
@@ -39,8 +36,8 @@ export default defineConfig({
     rollupOptions: {
       input: path.resolve(__dirname, "index.html"),
       output: {
-        inlineDynamicImports: true,
         entryFileNames: "assets/kyte-mobile.js",
+        chunkFileNames: "assets/kyte-mobile-[hash].js",
         assetFileNames: "assets/kyte-mobile.[ext]",
       },
     },
