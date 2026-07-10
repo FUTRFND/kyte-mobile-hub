@@ -25,10 +25,14 @@ export default defineConfig({
     alias: { "@": path.resolve(__dirname, "src") },
     dedupe: ["react", "react-dom", "@tanstack/react-router", "@tanstack/react-query"],
   },
+  define: {
+    "import.meta.env.VITE_KYTE_MOBILE": JSON.stringify("1"),
+  },
   build: {
     outDir: path.resolve(__dirname, "dist"),
     emptyOutDir: true,
     target: "es2020",
+    modulePreload: { polyfill: false },
     sourcemap: false,
     rollupOptions: {
       input: path.resolve(__dirname, "index.html"),

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { KyteMark } from "./index";
-import { Apple, Mail } from "lucide-react";
+import { Apple } from "lucide-react";
 
 const schema = z.object({
   email: z.string().trim().email("Enter a valid email"),
@@ -20,24 +20,33 @@ export const Route = createFileRoute("/login")({
 function Login() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof FormValues, string>>>({});
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const checkedSessionRef = useRef(false);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+
+  mobileTimingLog("login.render", { mode, submitting, hasError: Boolean(error) });
 
   // Run session check ONCE on mount — not on every keystroke.
   useEffect(() => {
     if (checkedSessionRef.current) return;
     checkedSessionRef.current = true;
+    mobileTimingLog("login.session-check.start");
     let active = true;
     supabase.auth
       .getSession()
       .then(({ data }) => {
-        if (active && data.session) navigate({ to: "/app/home", replace: true });
+        mobileTimingLog("login.session-check.done", { hasSession: Boolean(data.session) });
+        const activeField = document.activeElement;
+        const userIsEditing = activeField === emailRef.current || activeField === passwordRef.current;
+        if (active && data.session && !userIsEditing) navigate({ to: "/app/home", replace: true });
       })
-      .catch((err) => console.warn("[login] session check failed", err));
+      .catch((err) => {
+        mobileTimingLog("login.session-check.failed", err);
+        console.warn("[login] session check failed", err);
+      });
     return () => {
       active = false;
     };
@@ -49,6 +58,8 @@ function Login() {
     setError(null);
     setFieldErrors({});
 
+    const email = emailRef.current?.value ?? "";
+    const password = passwordRef.current?.value ?? "";
     const parsed = schema.safeParse({ email, password });
     if (!parsed.success) {
       const nextErrors: Partial<Record<keyof FormValues, string>> = {};
@@ -62,6 +73,7 @@ function Login() {
     }
 
     try {
+      mobileTimingLog("login.submit.start", { mode });
       if (mode === "signup") {
         const { data, error } = await supabase.auth.signUp({
           email: parsed.data.email,
@@ -69,13 +81,16 @@ function Login() {
           options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
+        mobileTimingLog("login.submit.signup.done", { hasSession: Boolean(data.session) });
         if (data.session) navigate({ to: "/app/home", replace: true });
       } else {
         const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
         if (error) throw error;
+        mobileTimingLog("login.submit.signin.done", { hasSession: Boolean(data.session) });
         if (data.session) navigate({ to: "/app/home", replace: true });
       }
     } catch (e) {
+      mobileTimingLog("login.submit.failed", e);
       setError(e instanceof Error ? e.message : "Authentication failed");
     } finally {
       setSubmitting(false);
@@ -91,19 +106,9 @@ function Login() {
   };
 
   return (
-    <main className="relative flex min-h-dvh flex-col overflow-y-auto overflow-x-hidden bg-background px-6 safe-top safe-bottom">
-      <div
-        className="pointer-events-none absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full opacity-30 blur-3xl"
-        style={{ background: "var(--gradient-hero, hsl(var(--primary)))" }}
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute -bottom-40 -right-20 h-72 w-72 rounded-full opacity-20 blur-3xl"
-        style={{ background: "hsl(var(--primary))" }}
-        aria-hidden
-      />
+    <main className="relative flex min-h-screen flex-col overflow-y-auto overflow-x-hidden bg-background px-6 safe-top safe-bottom">
       <div className="relative flex flex-1 flex-col justify-center">
-        <div className="mb-8 flex flex-col items-center gap-3 animate-fade-in-up">
+        <div className="mb-8 flex flex-col items-center gap-3">
           <KyteMark size={52} />
           <h1 className="font-display text-2xl font-bold text-foreground">
             {mode === "signin" ? "Welcome back" : "Create your account"}
@@ -137,8 +142,7 @@ function Login() {
         <form onSubmit={onSubmit} className="flex flex-col gap-3" noValidate>
           <div>
             <label htmlFor="kyte-email" className="text-xs font-medium text-muted-foreground">Email</label>
-            <div className="mt-1 flex items-center gap-2 rounded-xl border border-input bg-surface px-3">
-              <Mail className="h-4 w-4 text-muted-foreground" />
+            <div className="mt-1 rounded-xl border border-input bg-surface px-3">
               <input
                 id="kyte-email"
                 name="email"
@@ -146,12 +150,11 @@ function Login() {
                 inputMode="email"
                 autoCapitalize="none"
                 autoCorrect="off"
-                autoComplete="username"
+                autoComplete="off"
                 spellCheck={false}
                 enterKeyHint="next"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-12 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
+                ref={emailRef}
+                className="h-12 w-full bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
                 placeholder="you@kyte.app"
                 style={{ fontSize: 16 }}
               />
@@ -165,10 +168,12 @@ function Login() {
               id="kyte-password"
               name="password"
               type="password"
-              autoComplete={mode === "signup" ? "new-password" : "current-password"}
+              autoCapitalize="none"
+              autoCorrect="off"
+              autoComplete="off"
+              spellCheck={false}
               enterKeyHint="go"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              ref={passwordRef}
               className="mt-1 h-12 w-full rounded-xl border border-input bg-surface px-3 text-base text-foreground outline-none placeholder:text-muted-foreground"
               placeholder="At least 8 characters"
               style={{ fontSize: 16 }}
@@ -208,6 +213,11 @@ function Login() {
       </div>
     </main>
   );
+}
+
+function mobileTimingLog(label: string, data?: unknown) {
+  if (!import.meta.env.DEV) return;
+  console.info(`[mobile:${Math.round(performance.now())}ms] ${label}`, data ?? "");
 }
 
 function GoogleGlyph() {

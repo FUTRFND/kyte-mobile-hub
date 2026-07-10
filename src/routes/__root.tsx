@@ -98,8 +98,10 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   const sessionHydratedRef = useRef(false);
+  const isMobileBuild = import.meta.env.VITE_KYTE_MOBILE === "1";
 
   useEffect(() => {
+    if (isMobileBuild) return;
     let active = true;
 
     supabase.auth
@@ -121,7 +123,11 @@ function RootComponent() {
       active = false;
       subscription.unsubscribe();
     };
-  }, [router, queryClient]);
+  }, [router, queryClient, isMobileBuild]);
+
+  if (isMobileBuild) {
+    return <Outlet />;
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
