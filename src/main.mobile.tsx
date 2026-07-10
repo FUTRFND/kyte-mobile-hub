@@ -18,8 +18,13 @@ import { supabase } from "./integrations/supabase/client";
 import { installGlobalDiagnosticHandlers, recordDiagnostic } from "./mobile/diagnostics";
 import { DiagnosticsOverlay } from "./mobile/DiagnosticsOverlay";
 import { DiagnosticsBoundary } from "./mobile/DiagnosticsBoundary";
+import { isMobileInputIsolationBuild } from "./mobile/isolation";
 
-installGlobalDiagnosticHandlers();
+const inputIsolationBuild = isMobileInputIsolationBuild();
+
+if (!inputIsolationBuild) {
+  installGlobalDiagnosticHandlers();
+}
 
 
 const rootEl = document.getElementById("root");
@@ -62,43 +67,37 @@ function isBenignError(payload: unknown): boolean {
   );
 }
 
-async function configureNativeKeyboard() {
-  // Keep this best-effort: a missing/unavailable native plugin must never block
-  // React from mounting or turn into a startup fatal screen.
-  try {
-    // @ts-expect-error — injected by Capacitor on-device
-    const cap = window.Capacitor;
-    if (!cap?.isNativePlatform?.()) return;
-    const { Keyboard, KeyboardResize, KeyboardStyle } = await import("@capacitor/keyboard");
-    await Keyboard.setResizeMode({ mode: KeyboardResize.Native });
-    await Keyboard.setStyle({ style: KeyboardStyle.Dark });
-  } catch (err) {
-    console.warn("[boot] native keyboard configuration skipped", err);
-  }
-}
-
 // Global safety nets — pre-mount throws paint the fatal card, post-mount
 // throws are logged only. iOS keyboard-focus noise is filtered.
-window.addEventListener("error", (e) => {
-  if (isBenignError(e)) return;
-  console.error("[boot] window.error", e.error ?? e.message);
-  recordDiagnostic("window.error", e.error ?? { message: e.message });
-  if (!reactMounted && rootEl) {
-    paintFatal("Something went wrong", String(e.error?.stack || e.message || e));
-  }
-});
-window.addEventListener("unhandledrejection", (e) => {
-  if (isBenignError(e)) return;
-  console.error("[boot] unhandledrejection", e.reason);
-  recordDiagnostic("unhandledrejection", e.reason);
-  if (!reactMounted && rootEl) {
-    paintFatal("Something went wrong", String(e.reason?.stack || e.reason || "Unknown error"));
-  }
-});
+if (!inputIsolationBuild) {
+  window.addEventListener("error", (e) => {
+    if (isBenignError(e)) return;
+    console.error("[boot] window.error", e.error ?? e.message);
+    recordDiagnostic("window.error", e.error ?? { message: e.message });
+    if (!reactMounted && rootEl) {
+      paintFatal("Something went wrong", String(e.error?.stack || e.message || e));
+    }
+  });
+  window.addEventListener("unhandledrejection", (e) => {
+    if (isBenignError(e)) return;
+    console.error("[boot] unhandledrejection", e.reason);
+    recordDiagnostic("unhandledrejection", e.reason);
+    if (!reactMounted && rootEl) {
+      paintFatal("Something went wrong", String(e.reason?.stack || e.reason || "Unknown error"));
+    }
+  });
+}
+
+function forceInputDiagnosticRoute() {
+  if (!inputIsolationBuild) return;
+  if (window.location.hash === "#/mobile-input-test") return;
+  window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}#/mobile-input-test`);
+}
 
 
 async function boot() {
   if (!rootEl) throw new Error("#root element missing from index.html");
+  forceInputDiagnosticRoute();
 
   const queryClient = new QueryClient({
     defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
@@ -124,15 +123,13 @@ async function boot() {
     console.warn("[boot] supabase auth listener failed", err);
   }
 
-  void configureNativeKeyboard();
-
   createRoot(rootEl).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <DiagnosticsBoundary>
           <RouterProvider router={router} />
         </DiagnosticsBoundary>
-        <DiagnosticsOverlay />
+        {!inputIsolationBuild && <DiagnosticsOverlay />}
       </QueryClientProvider>
     </StrictMode>,
   );

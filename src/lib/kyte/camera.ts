@@ -1,4 +1,4 @@
-import { isNative } from "@/lib/kyte/native";
+import { isNative, nativePluginsDisabledForDiagnostics } from "@/lib/kyte/native";
 
 export type CaptureSource = "camera" | "library" | "prompt";
 
@@ -33,7 +33,7 @@ export class CameraUnavailableError extends Error {
 export async function capturePhoto(
   source: CaptureSource = "camera",
 ): Promise<CapturedImage | null> {
-  if (isNative()) {
+  if (isNative() && !nativePluginsDisabledForDiagnostics()) {
     return captureNative(source);
   }
   return captureWeb(source);
