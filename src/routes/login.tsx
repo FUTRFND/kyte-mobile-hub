@@ -12,14 +12,6 @@ const schema = z.object({
 });
 type FormValues = z.infer<typeof schema>;
 
-function formValuesFrom(form: HTMLFormElement): FormValues {
-  const data = new FormData(form);
-  return {
-    email: String(data.get("email") ?? ""),
-    password: String(data.get("password") ?? ""),
-  };
-}
-
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Sign in — Kyte" }] }),
   component: Login,
@@ -28,36 +20,28 @@ export const Route = createFileRoute("/login")({
 function Login() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof FormValues, string>>>({});
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const checkedSessionRef = useRef(false);
 
+  // Run session check ONCE on mount — not on every keystroke.
   useEffect(() => {
     if (checkedSessionRef.current) return;
     checkedSessionRef.current = true;
     let active = true;
-
     supabase.auth
       .getSession()
       .then(({ data }) => {
-        if (active && data.session) {
-          navigate({ to: "/app/home", replace: true });
-        }
+        if (active && data.session) navigate({ to: "/app/home", replace: true });
       })
-      .catch((err) => {
-        console.warn("[login] session check failed", err);
-      });
-
+      .catch((err) => console.warn("[login] session check failed", err));
     return () => {
       active = false;
     };
   }, [navigate]);
-
-  const clearField = (field: keyof FormValues) => {
-    setFieldErrors((current) => current[field] ? { ...current, [field]: undefined } : current);
-    if (error) setError(null);
-  };
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -65,7 +49,7 @@ function Login() {
     setError(null);
     setFieldErrors({});
 
-    const parsed = schema.safeParse(formValuesFrom(event.currentTarget));
+    const parsed = schema.safeParse({ email, password });
     if (!parsed.success) {
       const nextErrors: Partial<Record<keyof FormValues, string>> = {};
       for (const issue of parsed.error.issues) {
@@ -108,7 +92,6 @@ function Login() {
 
   return (
     <main className="relative flex min-h-dvh flex-col overflow-y-auto overflow-x-hidden bg-background px-6 safe-top safe-bottom">
-      {/* Ambient mesh gradient */}
       <div
         className="pointer-events-none absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full opacity-30 blur-3xl"
         style={{ background: "var(--gradient-hero, hsl(var(--primary)))" }}
@@ -166,9 +149,11 @@ function Login() {
                 autoComplete="username"
                 spellCheck={false}
                 enterKeyHint="next"
-                onFocus={() => clearField("email")}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="h-12 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
                 placeholder="you@kyte.app"
+                style={{ fontSize: 16 }}
               />
             </div>
             {fieldErrors.email && <p className="mt-1 text-xs text-destructive">{fieldErrors.email}</p>}
@@ -182,9 +167,11 @@ function Login() {
               type="password"
               autoComplete={mode === "signup" ? "new-password" : "current-password"}
               enterKeyHint="go"
-              onFocus={() => clearField("password")}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="mt-1 h-12 w-full rounded-xl border border-input bg-surface px-3 text-base text-foreground outline-none placeholder:text-muted-foreground"
               placeholder="At least 8 characters"
+              style={{ fontSize: 16 }}
             />
             {fieldErrors.password && <p className="mt-1 text-xs text-destructive">{fieldErrors.password}</p>}
           </div>

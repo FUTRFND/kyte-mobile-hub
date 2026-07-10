@@ -18,14 +18,8 @@ import { supabase } from "./integrations/supabase/client";
 import { installGlobalDiagnosticHandlers, recordDiagnostic } from "./mobile/diagnostics";
 import { DiagnosticsOverlay } from "./mobile/DiagnosticsOverlay";
 import { DiagnosticsBoundary } from "./mobile/DiagnosticsBoundary";
-import { isMobileInputIsolationBuild } from "./mobile/isolation";
 
-const inputIsolationBuild = isMobileInputIsolationBuild();
-
-if (!inputIsolationBuild) {
-  installGlobalDiagnosticHandlers();
-}
-
+installGlobalDiagnosticHandlers();
 
 const rootEl = document.getElementById("root");
 
@@ -63,41 +57,29 @@ function isBenignError(payload: unknown): boolean {
     msg.includes("resizeobserver") ||
     msg.includes("non-error promise rejection") ||
     msg.includes("script error") ||
-    msg.includes("load failed") // WKWebView network noise
+    msg.includes("load failed")
   );
 }
 
-// Global safety nets — pre-mount throws paint the fatal card, post-mount
-// throws are logged only. iOS keyboard-focus noise is filtered.
-if (!inputIsolationBuild) {
-  window.addEventListener("error", (e) => {
-    if (isBenignError(e)) return;
-    console.error("[boot] window.error", e.error ?? e.message);
-    recordDiagnostic("window.error", e.error ?? { message: e.message });
-    if (!reactMounted && rootEl) {
-      paintFatal("Something went wrong", String(e.error?.stack || e.message || e));
-    }
-  });
-  window.addEventListener("unhandledrejection", (e) => {
-    if (isBenignError(e)) return;
-    console.error("[boot] unhandledrejection", e.reason);
-    recordDiagnostic("unhandledrejection", e.reason);
-    if (!reactMounted && rootEl) {
-      paintFatal("Something went wrong", String(e.reason?.stack || e.reason || "Unknown error"));
-    }
-  });
-}
-
-function forceInputDiagnosticRoute() {
-  if (!inputIsolationBuild) return;
-  if (window.location.hash === "#/mobile-input-test") return;
-  window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}#/mobile-input-test`);
-}
-
+window.addEventListener("error", (e) => {
+  if (isBenignError(e)) return;
+  console.error("[boot] window.error", e.error ?? e.message);
+  recordDiagnostic("window.error", e.error ?? { message: e.message });
+  if (!reactMounted && rootEl) {
+    paintFatal("Something went wrong", String(e.error?.stack || e.message || e));
+  }
+});
+window.addEventListener("unhandledrejection", (e) => {
+  if (isBenignError(e)) return;
+  console.error("[boot] unhandledrejection", e.reason);
+  recordDiagnostic("unhandledrejection", e.reason);
+  if (!reactMounted && rootEl) {
+    paintFatal("Something went wrong", String(e.reason?.stack || e.reason || "Unknown error"));
+  }
+});
 
 async function boot() {
   if (!rootEl) throw new Error("#root element missing from index.html");
-  forceInputDiagnosticRoute();
 
   const queryClient = new QueryClient({
     defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
@@ -129,11 +111,10 @@ async function boot() {
         <DiagnosticsBoundary>
           <RouterProvider router={router} />
         </DiagnosticsBoundary>
-        {!inputIsolationBuild && <DiagnosticsOverlay />}
+        <DiagnosticsOverlay />
       </QueryClientProvider>
     </StrictMode>,
   );
-
 
   // Mark mounted on the next frame — by then React has committed and the
   // boot-fallback is gone. Any error after this point must not wipe the UI.
@@ -146,5 +127,4 @@ boot().catch((err) => {
   console.error("[boot] fatal", err);
   recordDiagnostic("boot.fatal", err);
   paintFatal("Kyte failed to start", String(err?.stack || err?.message || err));
-
 });
