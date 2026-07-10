@@ -9,6 +9,12 @@ const config: CapacitorConfig = {
   appName: "Kyte",
   webDir: "dist",
   backgroundColor: "#0B0B0D",
+  server: {
+    hostname: "localhost",
+    iosScheme: "capacitor",
+    androidScheme: "https",
+    appStartPath: "/",
+  },
   plugins: {
     SplashScreen: {
       launchAutoHide: true,
