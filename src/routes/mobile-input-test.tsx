@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 
 export const Route = createFileRoute("/mobile-input-test")({
   component: MobileInputTest,
@@ -151,4 +151,4 @@ const styles = {
     padding: 12,
     overflow: "auto",
   },
-} satisfies Record<string, React.CSSProperties>;
+} satisfies Record<string, CSSProperties>;
