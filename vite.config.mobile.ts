@@ -9,8 +9,9 @@ import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import path from "node:path";
 
 export default defineConfig({
-  // Relative base so assets resolve under Capacitor's `capacitor://` / `file://` origin.
-  base: "./",
+  // Root-relative assets keep the JS bundle loadable even if iOS restores a
+  // previous in-app URL such as /app/home before the router takes over.
+  base: "/",
   plugins: [
     tanstackRouter({
       target: "react",
