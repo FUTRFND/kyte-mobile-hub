@@ -70,7 +70,7 @@ async function configureNativeKeyboard() {
     const cap = window.Capacitor;
     if (!cap?.isNativePlatform?.()) return;
     const { Keyboard, KeyboardResize, KeyboardStyle } = await import("@capacitor/keyboard");
-    await Keyboard.setResizeMode({ mode: KeyboardResize.Body });
+    await Keyboard.setResizeMode({ mode: KeyboardResize.Native });
     await Keyboard.setStyle({ style: KeyboardStyle.Dark });
   } catch (err) {
     console.warn("[boot] native keyboard configuration skipped", err);

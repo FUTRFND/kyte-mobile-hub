@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -12,6 +12,14 @@ const schema = z.object({
 });
 type FormValues = z.infer<typeof schema>;
 
+function formValuesFrom(form: HTMLFormElement): FormValues {
+  const data = new FormData(form);
+  return {
+    email: String(data.get("email") ?? ""),
+    password: String(data.get("password") ?? ""),
+  };
+}
+
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Sign in — Kyte" }] }),
   component: Login,
@@ -20,12 +28,14 @@ export const Route = createFileRoute("/login")({
 function Login() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const [values, setValues] = useState<FormValues>({ email: "", password: "" });
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof FormValues, string>>>({});
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const checkedSessionRef = useRef(false);
 
   useEffect(() => {
+    if (checkedSessionRef.current) return;
+    checkedSessionRef.current = true;
     let active = true;
 
     supabase.auth
@@ -44,10 +54,9 @@ function Login() {
     };
   }, [navigate]);
 
-  const setField = (field: keyof FormValues, value: string) => {
-    setValues((current) => ({ ...current, [field]: value }));
-    setFieldErrors((current) => ({ ...current, [field]: undefined }));
-    setError(null);
+  const clearField = (field: keyof FormValues) => {
+    setFieldErrors((current) => current[field] ? { ...current, [field]: undefined } : current);
+    if (error) setError(null);
   };
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -56,7 +65,7 @@ function Login() {
     setError(null);
     setFieldErrors({});
 
-    const parsed = schema.safeParse(values);
+    const parsed = schema.safeParse(formValuesFrom(event.currentTarget));
     if (!parsed.success) {
       const nextErrors: Partial<Record<keyof FormValues, string>> = {};
       for (const issue of parsed.error.issues) {
@@ -98,7 +107,7 @@ function Login() {
   };
 
   return (
-    <main className="relative flex min-h-dvh flex-col overflow-hidden bg-background px-6 safe-top safe-bottom">
+    <main className="relative flex min-h-dvh flex-col overflow-y-auto overflow-x-hidden bg-background px-6 safe-top safe-bottom">
       {/* Ambient mesh gradient */}
       <div
         className="pointer-events-none absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full opacity-30 blur-3xl"
@@ -157,9 +166,7 @@ function Login() {
                 autoComplete="username"
                 spellCheck={false}
                 enterKeyHint="next"
-                value={values.email}
-                onChange={(event) => setField("email", event.currentTarget.value)}
-                onInput={(event) => setField("email", event.currentTarget.value)}
+                onFocus={() => clearField("email")}
                 className="h-12 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
                 placeholder="you@kyte.app"
               />
@@ -175,9 +182,7 @@ function Login() {
               type="password"
               autoComplete={mode === "signup" ? "new-password" : "current-password"}
               enterKeyHint="go"
-              value={values.password}
-              onChange={(event) => setField("password", event.currentTarget.value)}
-              onInput={(event) => setField("password", event.currentTarget.value)}
+              onFocus={() => clearField("password")}
               className="mt-1 h-12 w-full rounded-xl border border-input bg-surface px-3 text-base text-foreground outline-none placeholder:text-muted-foreground"
               placeholder="At least 8 characters"
             />
