@@ -29,13 +29,65 @@
     </div>
     <script type="module" src="/src/main.mobile.tsx"></script>
     <script>
+      (function () {
+        var storageKey = "kyte.diagnostics.lastError.v1";
+        function saveStartupError(source, detail) {
+          try {
+            window.localStorage.setItem(storageKey, JSON.stringify({
+              source: source,
+              message: detail && detail.message ? String(detail.message) : "App bundle failed to load",
+              stack: detail && detail.stack ? String(detail.stack) : "",
+              timestamp: new Date().toISOString(),
+              route: window.location.pathname + window.location.search,
+              userAgent: window.navigator.userAgent,
+              buildVersion: "mobile-startup"
+            }));
+          } catch (_) {}
+        }
+
+        window.addEventListener("error", function (event) {
+          var target = event && event.target;
+          var isResourceError = target && target !== window && (target.tagName === "SCRIPT" || target.tagName === "LINK");
+          if (!isResourceError) return;
+          saveStartupError("startup.resource", {
+            message: target.tagName + " failed to load: " + (target.src || target.href || "unknown resource")
+          });
+        }, true);
+
+        window.addEventListener("error", function (event) {
+          if (!event || !event.message) return;
+          saveStartupError("startup.window", {
+            message: event.message,
+            stack: event.error && event.error.stack ? event.error.stack : ""
+          });
+        });
+
+        window.addEventListener("unhandledrejection", function (event) {
+          var reason = event && event.reason;
+          saveStartupError("startup.promise", {
+            message: reason && reason.message ? reason.message : String(reason || "Unhandled promise rejection"),
+            stack: reason && reason.stack ? reason.stack : ""
+          });
+        });
+      })();
+
       // If the module script never executes (parse error, missing asset under the app scheme),
       // show a recoverable error state after 8s instead of an indefinite black/loading screen.
       setTimeout(function () {
         var fb = document.getElementById("boot-fallback");
         if (!fb) return; // React already mounted
+        var diagnostic = null;
+        try {
+          diagnostic = JSON.parse(window.localStorage.getItem("kyte.diagnostics.lastError.v1") || "null");
+        } catch (_) {}
+        var details = diagnostic
+          ? '<pre style="margin:18px auto 0;max-width:340px;max-height:220px;overflow:auto;text-align:left;white-space:pre-wrap;word-break:break-word;border:1px solid #333;border-radius:10px;padding:10px;color:#f5f5f5;background:#111;font-size:11px;line-height:1.4;">' +
+            String((diagnostic.source || "startup") + "\n" + (diagnostic.message || "") + "\n" + (diagnostic.stack || "")).replace(/[&<>]/g, function (ch) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[ch]; }) +
+            '</pre>'
+          : '';
         fb.innerHTML = '<div><div class="title">Kyte failed to start</div>' +
           '<div class="sub">The app bundle didn\'t load. Please reopen the app.</div>' +
+          details +
           '<button onclick="location.reload()" style="margin-top:20px;padding:10px 22px;border-radius:10px;background:#0098FF;color:#0B0B0D;font-weight:700;border:0;font-size:14px;">Reload</button></div>';
       }, 8000);
     </script>
