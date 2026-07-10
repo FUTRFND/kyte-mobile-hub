@@ -27,6 +27,15 @@
         </div>
       </div>
     </div>
+    <script>
+      (function () {
+        var path = window.location.pathname;
+        var isPackagedApp = window.location.protocol === "capacitor:" || window.location.protocol === "file:";
+        if (isPackagedApp && path && path !== "/" && !window.location.hash) {
+          window.location.replace("/#" + path + window.location.search);
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.mobile.tsx"></script>
     <script>
       (function () {
