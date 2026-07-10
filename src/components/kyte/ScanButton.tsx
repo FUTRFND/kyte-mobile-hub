@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Camera, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { scanImage, type ScanResult } from "@/lib/kyte/ocr";
+import type { ScanResult } from "@/lib/kyte/ocr";
 import {
   capturePhoto,
   CameraPermissionError,
@@ -41,6 +41,7 @@ export function ScanButton({
       }
       previewUrl = captured.previewUrl;
       toast.loading("Reading bill…", { id: scanToast });
+      const { scanImage } = await import("@/lib/kyte/ocr");
       const result = await scanImage(captured.blob);
       toast.success(
         result.name || result.amount

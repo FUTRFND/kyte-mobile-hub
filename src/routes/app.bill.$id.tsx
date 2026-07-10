@@ -13,7 +13,6 @@ import {
   toISODate,
 } from "@/lib/kyte/bills";
 import { BillFormSheet } from "@/components/kyte/BillFormSheet";
-import { verifyBiometric } from "@/lib/kyte/biometric";
 import { enqueueMarkPaid, flushPending } from "@/lib/kyte/offlineQueue";
 import { AnimatedMoney, Sparkline } from "@/lib/kyte/animated";
 
@@ -110,6 +109,7 @@ function BillDetail() {
 
   const payNow = async () => {
     if (profile?.pay_requires_biometric) {
+      const { verifyBiometric } = await import("@/lib/kyte/biometric");
       const ok = await verifyBiometric(`Authorize payment for ${bill.name}`);
       if (!ok) return;
     }
