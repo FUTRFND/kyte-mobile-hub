@@ -1,16 +1,37 @@
-// Temporary Capacitor diagnostic build. Run with: `vite build --config vite.config.mobile.ts`.
-// This intentionally emits a static dist/index.html with no JavaScript runtime,
-// no React bootstrap, no router, no backend client, and no native plugin calls.
+// Capacitor mobile build. Produces a fully static SPA in dist/ that
+// Capacitor packages as the iOS/Android web asset bundle.
+//
+// This is the FULL Kyte application — same routes and providers as the
+// TanStack Start preview, mounted via src/main.mobile.tsx in CSR mode
+// (no SSR, no server functions).
 import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import path from "node:path";
 
 export default defineConfig({
-  root: path.resolve(__dirname, "mobile-static"),
-  base: "./",
+  plugins: [
+    TanStackRouterVite({
+      target: "react",
+      autoCodeSplitting: true,
+      routesDirectory: path.resolve(__dirname, "src/routes"),
+      generatedRouteTree: path.resolve(__dirname, "src/routeTree.gen.ts"),
+    }),
+    react(),
+    tailwindcss(),
+  ],
+  resolve: {
+    alias: { "@": path.resolve(__dirname, "src") },
+    dedupe: ["react", "react-dom", "@tanstack/react-router", "@tanstack/react-query"],
+  },
   build: {
     outDir: path.resolve(__dirname, "dist"),
     emptyOutDir: true,
     target: "es2020",
     sourcemap: false,
+    rollupOptions: {
+      input: path.resolve(__dirname, "index.html"),
+    },
   },
 });
