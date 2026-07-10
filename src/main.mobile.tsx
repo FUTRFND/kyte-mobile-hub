@@ -11,7 +11,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RouterProvider, createRouter } from "@tanstack/react-router";
+import { RouterProvider, createHashHistory, createRouter } from "@tanstack/react-router";
 import "./styles.css";
 import { routeTree } from "./routeTree.gen";
 import { supabase } from "./integrations/supabase/client";
@@ -106,6 +106,7 @@ async function boot() {
 
   const router = createRouter({
     routeTree,
+    history: createHashHistory(),
     context: { queryClient },
     defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
