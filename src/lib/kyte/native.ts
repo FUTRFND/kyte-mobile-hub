@@ -6,11 +6,3 @@ export function isNative(): boolean {
   const cap = window.Capacitor;
   return Boolean(cap?.isNativePlatform?.());
 }
-
-export function nativePluginsDisabledForDiagnostics(): boolean {
-  try {
-    return import.meta.env.VITE_MOBILE_INPUT_DIAGNOSTIC === "1";
-  } catch {
-    return false;
-  }
-}

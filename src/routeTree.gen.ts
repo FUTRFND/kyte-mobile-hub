@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
-import { Route as MobileInputTestRouteImport } from './routes/mobile-input-test'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as InsightsRouteImport } from './routes/insights'
 import { Route as IncomeRouteImport } from './routes/income'
@@ -46,11 +45,6 @@ const ProfileRoute = ProfileRouteImport.update({
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MobileInputTestRoute = MobileInputTestRouteImport.update({
-  id: '/mobile-input-test',
-  path: '/mobile-input-test',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -159,7 +153,6 @@ export interface FileRoutesByFullPath {
   '/income': typeof IncomeRoute
   '/insights': typeof InsightsRoute
   '/login': typeof LoginRoute
-  '/mobile-input-test': typeof MobileInputTestRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
@@ -184,7 +177,6 @@ export interface FileRoutesByTo {
   '/income': typeof IncomeRoute
   '/insights': typeof InsightsRoute
   '/login': typeof LoginRoute
-  '/mobile-input-test': typeof MobileInputTestRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
@@ -210,7 +202,6 @@ export interface FileRoutesById {
   '/income': typeof IncomeRoute
   '/insights': typeof InsightsRoute
   '/login': typeof LoginRoute
-  '/mobile-input-test': typeof MobileInputTestRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
@@ -237,7 +228,6 @@ export interface FileRouteTypes {
     | '/income'
     | '/insights'
     | '/login'
-    | '/mobile-input-test'
     | '/onboarding'
     | '/profile'
     | '/settings'
@@ -262,7 +252,6 @@ export interface FileRouteTypes {
     | '/income'
     | '/insights'
     | '/login'
-    | '/mobile-input-test'
     | '/onboarding'
     | '/profile'
     | '/settings'
@@ -287,7 +276,6 @@ export interface FileRouteTypes {
     | '/income'
     | '/insights'
     | '/login'
-    | '/mobile-input-test'
     | '/onboarding'
     | '/profile'
     | '/settings'
@@ -313,7 +301,6 @@ export interface RootRouteChildren {
   IncomeRoute: typeof IncomeRoute
   InsightsRoute: typeof InsightsRoute
   LoginRoute: typeof LoginRoute
-  MobileInputTestRoute: typeof MobileInputTestRoute
   OnboardingRoute: typeof OnboardingRoute
   ProfileRoute: typeof ProfileRoute
   SettingsRoute: typeof SettingsRoute
@@ -341,13 +328,6 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mobile-input-test': {
-      id: '/mobile-input-test'
-      path: '/mobile-input-test'
-      fullPath: '/mobile-input-test'
-      preLoaderRoute: typeof MobileInputTestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -522,7 +502,6 @@ const rootRouteChildren: RootRouteChildren = {
   IncomeRoute: IncomeRoute,
   InsightsRoute: InsightsRoute,
   LoginRoute: LoginRoute,
-  MobileInputTestRoute: MobileInputTestRoute,
   OnboardingRoute: OnboardingRoute,
   ProfileRoute: ProfileRoute,
   SettingsRoute: SettingsRoute,
