@@ -1,4 +1,4 @@
-import { isNative } from "./native";
+import { isNative, nativePluginsDisabledForDiagnostics } from "./native";
 import { nextDue, parseDate, type Bill } from "./bills";
 
 export type ReminderPrefs = {
@@ -40,6 +40,7 @@ function avoidQuietHours(fireAt: Date, prefs: ReminderPrefs): Date {
 }
 
 export async function ensurePermission(): Promise<boolean> {
+  if (nativePluginsDisabledForDiagnostics()) return false;
   if (!isNative()) return false;
   try {
     const { LocalNotifications } = await import("@capacitor/local-notifications");
@@ -54,6 +55,7 @@ export async function ensurePermission(): Promise<boolean> {
 }
 
 export async function scheduleBillReminders(bill: Bill, prefs: ReminderPrefs): Promise<void> {
+  if (nativePluginsDisabledForDiagnostics()) return;
   if (!isNative()) return;
   try {
     const { LocalNotifications } = await import("@capacitor/local-notifications");
@@ -98,6 +100,7 @@ export async function scheduleBillReminders(bill: Bill, prefs: ReminderPrefs): P
 }
 
 export async function cancelBillReminder(billId: string): Promise<void> {
+  if (nativePluginsDisabledForDiagnostics()) return;
   if (!isNative()) return;
   try {
     const { LocalNotifications } = await import("@capacitor/local-notifications");
@@ -109,6 +112,7 @@ export async function cancelBillReminder(billId: string): Promise<void> {
 }
 
 export async function rescheduleAll(bills: Bill[], prefs: ReminderPrefs) {
+  if (nativePluginsDisabledForDiagnostics()) return;
   if (!isNative()) return;
   await ensurePermission();
   await Promise.all(bills.map((b) => scheduleBillReminders(b, prefs)));

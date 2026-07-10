@@ -44,5 +44,6 @@ export default defineConfig({
   },
   define: {
     "process.env.NODE_ENV": JSON.stringify("production"),
+    "import.meta.env.VITE_MOBILE_INPUT_DIAGNOSTIC": JSON.stringify("1"),
   },
 });
