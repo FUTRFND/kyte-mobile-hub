@@ -100,41 +100,7 @@
           '<button onclick="location.reload()" style="margin-top:20px;padding:10px 22px;border-radius:10px;background:#0098FF;color:#0B0B0D;font-weight:700;border:0;font-size:14px;">Reload</button></div>';
       }, 8000);
     </script>
-    <script type="module">
-      // The mobile app must run from Capacitor's packaged Vite build, where this
-      // inline import is rewritten to /assets/kyte-mobile.js. If this source
-      // index is ever served from a remote preview/TestFlight URL, do not try to
-      // execute /src/main.mobile.tsx — production WebViews cannot load TSX.
-      var canLoadSourceEntry =
-        window.location.protocol === "capacitor:" ||
-        window.location.protocol === "file:" ||
-        window.location.hostname === "localhost" ||
-        window.location.hostname === "127.0.0.1";
-
-      if (canLoadSourceEntry) {
-        import("/src/main.mobile.tsx");
-      } else {
-        try {
-          window.localStorage.setItem("kyte.diagnostics.lastError.v1", JSON.stringify({
-            source: "startup.unbuilt-index",
-            message: "The native app loaded the source index.html from a remote URL instead of the packaged dist/index.html build.",
-            stack: "Rebuild with `bun run cap:sync` / `npx cap sync ios` and confirm the iOS capacitor.config.json has no server.url.",
-            timestamp: new Date().toISOString(),
-            route: window.location.pathname + window.location.search,
-            userAgent: window.navigator.userAgent,
-            buildVersion: "source-index"
-          }));
-        } catch (_) {}
-
-        var fb = document.getElementById("boot-fallback");
-        if (fb) {
-          fb.innerHTML = '<div><div class="title">Kyte build is not packaged</div>' +
-            '<div class="sub">This TestFlight build is loading a remote source page instead of the compiled app bundle.</div>' +
-            '<pre style="margin:18px auto 0;max-width:340px;max-height:220px;overflow:auto;text-align:left;white-space:pre-wrap;word-break:break-word;border:1px solid #333;border-radius:10px;padding:10px;color:#f5f5f5;background:#111;font-size:11px;line-height:1.4;">startup.unbuilt-index\nLoaded from: ' +
-            String(window.location.origin).replace(/[&<>]/g, function (ch) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[ch]; }) +
-            '\nExpected: capacitor://localhost packaged dist/index.html</pre></div>';
-        }
-      }
-    </script>
+    <!-- Vite rewrites this tag to the hashed asset (/assets/kyte-mobile.js) in the packaged build. -->
+    <script type="module" src="/src/main.mobile.tsx"></script>
   </body>
 </html>
