@@ -31,7 +31,8 @@
       (function () {
         var path = window.location.pathname;
         var isPackagedApp = window.location.protocol === "capacitor:" || window.location.protocol === "file:";
-        if (isPackagedApp && path && path !== "/" && !window.location.hash) {
+        var isAppRoute = /^\/(app|login|onboarding|home|calendar|history|income|insights|profile|settings|accounts|bill)(\/|$)/.test(path);
+        if (isPackagedApp && isAppRoute && !window.location.hash) {
           window.location.replace("/#" + path + window.location.search);
         }
       })();
