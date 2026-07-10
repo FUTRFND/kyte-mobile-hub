@@ -14,14 +14,6 @@ const config: CapacitorConfig = {
     androidScheme: "https",
     appStartPath: "/",
   },
-  plugins: {
-    SplashScreen: {
-      launchAutoHide: true,
-      backgroundColor: "#0B0B0D",
-      androidSplashResourceName: "splash",
-      showSpinner: false,
-    },
-  },
 };
 
 export default config;
