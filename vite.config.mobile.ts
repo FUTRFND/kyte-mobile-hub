@@ -9,8 +9,9 @@ import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import path from "node:path";
 
 export default defineConfig({
-  // Relative base so assets resolve under Capacitor's `capacitor://` / `file://` origin.
-  base: "./",
+  // Root-relative assets keep the JS bundle loadable even if iOS restores a
+  // previous in-app URL such as /app/home before the router takes over.
+  base: "/",
   plugins: [
     tanstackRouter({
       target: "react",
@@ -29,9 +30,16 @@ export default defineConfig({
     outDir: "dist",
     emptyOutDir: true,
     target: "es2020",
-    sourcemap: false,
+    sourcemap: true,
+    cssCodeSplit: false,
+    modulePreload: false,
     rollupOptions: {
       input: path.resolve(__dirname, "index.html"),
+      output: {
+        entryFileNames: "assets/kyte-mobile.js",
+        chunkFileNames: "assets/kyte-mobile-[hash].js",
+        assetFileNames: "assets/kyte-mobile.[ext]",
+      },
     },
   },
   define: {

@@ -22,15 +22,8 @@ import {
   profileQuery,
   transactionsQuery,
 } from "@/lib/kyte/queries";
-import { biometricStatus } from "@/lib/kyte/biometric";
 import { isNative } from "@/lib/kyte/native";
-import {
-  ensurePermission,
-  rescheduleAll,
-  type ReminderPrefs,
-} from "@/lib/kyte/notifications";
-import { downloadFile, toCSV } from "@/lib/kyte/export";
-import { buildMonthlyReport, downloadBlob, lastNMonths } from "@/lib/kyte/report";
+import type { ReminderPrefs } from "@/lib/kyte/notifications";
 import { seedDemoData } from "@/lib/kyte/demoData";
 
 export const Route = createFileRoute("/app/settings")({
@@ -43,6 +36,16 @@ const CHANNEL_OPTIONS = [
   { id: "push", label: "Push" },
   { id: "email", label: "Email" },
 ];
+
+function lastNMonths(n: number, from = new Date()): { year: number; monthIndex: number }[] {
+  const out: { year: number; monthIndex: number }[] = [];
+  const cursor = new Date(from.getFullYear(), from.getMonth(), 1);
+  for (let i = 0; i < n; i++) {
+    out.push({ year: cursor.getFullYear(), monthIndex: cursor.getMonth() });
+    cursor.setMonth(cursor.getMonth() - 1);
+  }
+  return out;
+}
 
 function SettingsPage() {
   const nav = useNavigate();
@@ -58,7 +61,9 @@ function SettingsPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   useEffect(() => {
-    biometricStatus().then((s) => setBioAvailable(s === "available"));
+    import("@/lib/kyte/biometric").then(({ biometricStatus }) => {
+      biometricStatus().then((s) => setBioAvailable(s === "available"));
+    });
   }, []);
 
   useEffect(() => {
@@ -100,6 +105,7 @@ function SettingsPage() {
   };
 
   const toggleLead = async (d: number) => {
+    const { rescheduleAll } = await import("@/lib/kyte/notifications");
     const cur = new Set(prefs.daysBefore);
     cur.has(d) ? cur.delete(d) : cur.add(d);
     const arr = Array.from(cur).sort((a, b) => b - a);
@@ -109,6 +115,7 @@ function SettingsPage() {
   };
 
   const toggleChannel = async (id: string) => {
+    const { rescheduleAll } = await import("@/lib/kyte/notifications");
     const cur = new Set(prefs.channels);
     cur.has(id) ? cur.delete(id) : cur.add(id);
     const next = Array.from(cur);
@@ -139,12 +146,14 @@ function SettingsPage() {
   };
 
   const toggleNotifications = async () => {
+    const { ensurePermission, rescheduleAll } = await import("@/lib/kyte/notifications");
     const ok = await ensurePermission();
     if (ok) await rescheduleAll(bills, prefs);
     alert(ok ? "Reminders scheduled." : "Permission denied or web preview.");
   };
 
-  const exportAll = () => {
+  const exportAll = async () => {
+    const { downloadFile, toCSV } = await import("@/lib/kyte/export");
     const lines: string[] = [];
     lines.push("# Bills\n" + toCSV(bills, ["name", "amount", "due_date", "frequency", "category", "notes"]));
     lines.push("\n# Payments\n" + toCSV(payments, ["paid_on", "bill_id", "amount", "period_date"]));
@@ -156,7 +165,8 @@ function SettingsPage() {
     downloadFile(`kyte-export-${new Date().toISOString().slice(0, 10)}.txt`, lines.join("\n"), "text/plain");
   };
 
-  const downloadReport = (year: number, monthIndex: number) => {
+  const downloadReport = async (year: number, monthIndex: number) => {
+    const { buildMonthlyReport, downloadBlob } = await import("@/lib/kyte/report");
     const blob = buildMonthlyReport({
       year,
       monthIndex,

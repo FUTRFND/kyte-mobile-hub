@@ -12,7 +12,6 @@ import {
   type Transaction,
 } from "@/lib/kyte/queries";
 import { CATEGORY_COLORS, formatMoney } from "@/lib/kyte/bills";
-import { downloadFile, toCSV } from "@/lib/kyte/export";
 import { supabase } from "@/integrations/supabase/client";
 import { AnimatedMoney } from "@/lib/kyte/animated";
 
@@ -93,7 +92,8 @@ function HistoryTab() {
     return Array.from(map.entries());
   }, [entries]);
 
-  const exportCsv = () => {
+  const exportCsv = async () => {
+    const { downloadFile, toCSV } = await import("@/lib/kyte/export");
     const csv = toCSV(entries, ["date", "name", "kind", "category", "amount", "source"]);
     downloadFile(`kyte-history-${new Date().toISOString().slice(0, 10)}.csv`, csv);
   };

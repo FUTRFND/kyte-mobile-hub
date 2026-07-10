@@ -10,7 +10,11 @@
 //   promise rejections). Wiping #root on those looks like an app crash.
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { RouterProvider, createHashHistory, createRouter } from "@tanstack/react-router";
 import "./styles.css";
+import { routeTree } from "./routeTree.gen";
+import { supabase } from "./integrations/supabase/client";
 import { installGlobalDiagnosticHandlers, recordDiagnostic } from "./mobile/diagnostics";
 import { DiagnosticsOverlay } from "./mobile/DiagnosticsOverlay";
 import { DiagnosticsBoundary } from "./mobile/DiagnosticsBoundary";
@@ -96,19 +100,13 @@ window.addEventListener("unhandledrejection", (e) => {
 async function boot() {
   if (!rootEl) throw new Error("#root element missing from index.html");
 
-  const [{ QueryClient, QueryClientProvider }, { RouterProvider, createRouter }, routeMod, supaMod] = await Promise.all([
-    import("@tanstack/react-query"),
-    import("@tanstack/react-router"),
-    import("./routeTree.gen"),
-    import("./integrations/supabase/client"),
-  ]);
-
   const queryClient = new QueryClient({
     defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
   });
 
   const router = createRouter({
-    routeTree: routeMod.routeTree,
+    routeTree,
+    history: createHashHistory(),
     context: { queryClient },
     defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
@@ -117,7 +115,7 @@ async function boot() {
 
   // Keep TanStack Query + router in sync with Supabase auth (best-effort).
   try {
-    supaMod.supabase.auth.onAuthStateChange((event) => {
+    supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
