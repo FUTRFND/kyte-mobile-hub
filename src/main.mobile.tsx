@@ -6,15 +6,15 @@
 // session exists, the full Kyte React app mounts normally.
 //
 // Native OAuth uses Capacitor Browser + a custom URL scheme deep-link
-// (com.kyte.app://auth/callback). Email verification links use the same
-// scheme so tapping "Verify Email" reopens the app and completes sign-in.
+// (com.kytepayments.app://auth/callback). Email verification links use the
+// same scheme so tapping "Verify Email" reopens the app and completes sign-in.
 import "./styles.css";
 import { App as CapacitorApp } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 
 const rootEl = document.getElementById("root");
 const MOBILE_DEBUG = import.meta.env.DEV;
-const AUTH_REDIRECT = "com.kyte.app://auth/callback";
+const AUTH_REDIRECT = "com.kytepayments.app://auth/callback";
 
 function log(label: string, data?: unknown) {
   if (!MOBILE_DEBUG) return;
@@ -178,7 +178,7 @@ function wirePlainLogin() {
 /**
  * Deep-link handler.
  *
- * Fires when the OS reopens the app via com.kyte.app:// (OAuth callback,
+ * Fires when the OS reopens the app via com.kytepayments.app:// (OAuth callback,
  * verification email). Parses either a PKCE ?code=... or a token fragment
  * (#access_token=...&refresh_token=...), completes the Supabase session,
  * closes the in-app browser, and mounts the full app.
