@@ -4,6 +4,10 @@
 // providers, global input/key/focus listeners, DOM observers, or auth-router
 // invalidation can run while the user is typing credentials. After a valid
 // session exists, the full Kyte React app mounts normally.
+//
+// Native OAuth uses Capacitor Browser + a custom URL scheme deep-link
+// (com.kytepayments.app://auth/callback). Email verification links use the
+// same scheme so tapping "Verify Email" reopens the app and completes sign-in.
 import "./styles.css";
 import {
   authRedirectUrl,
@@ -138,7 +142,7 @@ function wirePlainLogin() {
         : await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (result.error) throw result.error;
       if (result.data.session) await mountFullApp("/app/home");
-      else setText("kyte-auth-error", "Check your email to finish creating your account.");
+      else setText("kyte-auth-error", "Check your email to finish creating your account. Tap the link on this device to sign in.");
     } catch (err) {
       setText("kyte-auth-error", err instanceof Error ? err.message : "Authentication failed");
     } finally {
@@ -146,18 +150,19 @@ function wirePlainLogin() {
     }
   });
 
-  const oauth = async (provider: "google" | "apple") => {
+  const nativeOAuth = async (provider: "google" | "apple") => {
     setText("kyte-auth-error", "");
     try {
       mobileTimingLog("plain-login.oauth.start", { provider });
       await startOAuth(provider);
     } catch (err) {
+      mobileTimingLog("oauth.failed", err);
       setText("kyte-auth-error", err instanceof Error ? err.message : "Sign-in failed");
     }
   };
 
-  googleButton?.addEventListener("click", () => void oauth("google"));
-  appleButton?.addEventListener("click", () => void oauth("apple"));
+  googleButton?.addEventListener("click", () => void nativeOAuth("google"));
+  appleButton?.addEventListener("click", () => void nativeOAuth("apple"));
 }
 
 async function mountFullApp(target = "/app/home") {
