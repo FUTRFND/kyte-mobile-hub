@@ -27,6 +27,8 @@ export type Database = {
           linked_at: string
           mask: string | null
           name: string | null
+          plaid_account_id: string | null
+          plaid_item_id: string | null
           provider: string
           status: string
           subtype: string | null
@@ -48,6 +50,8 @@ export type Database = {
           linked_at?: string
           mask?: string | null
           name?: string | null
+          plaid_account_id?: string | null
+          plaid_item_id?: string | null
           provider?: string
           status?: string
           subtype?: string | null
@@ -69,6 +73,8 @@ export type Database = {
           linked_at?: string
           mask?: string | null
           name?: string | null
+          plaid_account_id?: string | null
+          plaid_item_id?: string | null
           provider?: string
           status?: string
           subtype?: string | null

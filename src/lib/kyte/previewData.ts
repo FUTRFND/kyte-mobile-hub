@@ -269,7 +269,9 @@ export const previewTransactions: Transaction[] = [
   },
 ];
 
-const tellerExtras = {
+const plaidExtras = {
+  plaid_account_id: null,
+  plaid_item_id: null,
   teller_account_id: null,
   teller_enrollment_id: null,
   name: null,
@@ -285,7 +287,7 @@ export const previewAccounts: Account[] = [
   {
     id: "account-checking",
     user_id: userId,
-    provider: "teller",
+    provider: "plaid",
     institution: "Chase Checking",
     mask: "4821",
     status: "active",
@@ -293,7 +295,7 @@ export const previewAccounts: Account[] = [
     linked_at: stamp,
     created_at: stamp,
     updated_at: stamp,
-    ...tellerExtras,
+    ...plaidExtras,
   },
 ];
 

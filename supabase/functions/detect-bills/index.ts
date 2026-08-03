@@ -1,15 +1,13 @@
-// Smart bill detection: scans recent Teller transactions across all linked
+// Smart bill detection: scans recent Plaid transactions across all linked
 // accounts for the user and surfaces recurring outflows that look like bills.
-import { tellerJson, CORS_HEADERS, json } from "../_shared/teller.ts";
+import {
+  getTransactions,
+  type PlaidTransaction,
+  CORS_HEADERS,
+  json,
+  tokenFromBytea,
+} from "../_shared/plaid.ts";
 import { getUserClient, adminClient } from "../_shared/auth.ts";
-
-type TellerTxn = {
-  id: string;
-  date: string;
-  description: string;
-  amount: string;
-  details?: { category?: string | null };
-};
 
 type Suggestion = {
   key: string;
@@ -94,26 +92,23 @@ Deno.serve(async (req) => {
 
     const { data: accts, error } = await admin
       .from("accounts")
-      .select("id, teller_account_id, access_token_encrypted, name, institution")
+      .select("id, plaid_item_id, access_token_encrypted, name, institution")
       .eq("user_id", userId)
-      .eq("provider", "teller")
-      .eq("status", "linked");
+      .eq("provider", "plaid")
+      .eq("status", "active");
     if (error) throw error;
 
-    const allTxns: TellerTxn[] = [];
+    const allTxns: PlaidTransaction[] = [];
+    const fetchedItems = new Set<string>();
     for (const a of accts ?? []) {
-      if (!a.teller_account_id || !a.access_token_encrypted) continue;
+      if (!a.plaid_item_id || fetchedItems.has(a.plaid_item_id) || !a.access_token_encrypted) continue;
+      fetchedItems.add(a.plaid_item_id);
       try {
-        const token = new TextDecoder().decode(
-          a.access_token_encrypted as unknown as Uint8Array,
-        );
-        const txns = await tellerJson<TellerTxn[]>(
-          `/accounts/${a.teller_account_id}/transactions?count=200`,
-          token,
-        );
+        const token = tokenFromBytea(a.access_token_encrypted);
+        const txns = await getTransactions(token, undefined, 500);
         allTxns.push(...txns);
       } catch (e) {
-        console.warn("teller fetch failed for account", a.id, e);
+        console.warn("Plaid fetch failed for item", a.plaid_item_id, e);
       }
     }
 
@@ -128,11 +123,13 @@ Deno.serve(async (req) => {
     type Sample = { id: string; date: string; description: string; amount: number; category?: string | null };
     const samples: Sample[] = [
       ...allTxns.map((t) => ({
-        id: t.id,
+        id: t.transaction_id,
         date: t.date,
-        description: t.description,
-        amount: Number(t.amount),
-        category: t.details?.category ?? null,
+        description: t.merchant_name ?? t.name,
+        // Plaid represents an outflow as a positive number; normalize the app's
+        // transaction convention to negative for bill detection and display.
+        amount: -Number(t.amount),
+        category: t.personal_finance_category?.primary ?? null,
       })),
       ...(localTxns ?? []).map((t) => ({
         id: `local-${t.name}-${t.occurred_on}`,

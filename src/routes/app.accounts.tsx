@@ -4,10 +4,7 @@ import { useState } from "react";
 import { ArrowLeft, Landmark, Plus, RefreshCw, Trash2, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { accountsQuery } from "@/lib/kyte/queries";
-import { openTellerConnect, type TellerEnrollment } from "@/lib/kyte/tellerConnect";
-
-const TELLER_APP_ID = "app_pt12nf29f87r7go454000";
-const TELLER_ENV = "sandbox" as const;
+import { openPlaidLink } from "@/lib/kyte/plaidLink";
 
 export const Route = createFileRoute("/app/accounts")({
   head: () => ({ meta: [{ title: "Linked accounts — Kyte" }] }),
@@ -41,41 +38,30 @@ function AccountsPage() {
   const [openTxnsFor, setOpenTxnsFor] = useState<string | null>(null);
 
   const refreshBalances = useMutation({
-    mutationFn: () => callFn("teller-balances", { method: "POST" }),
+    mutationFn: () => callFn("plaid-balances", { method: "POST" }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["accounts"] }),
   });
 
-  const startTellerConnect = async () => {
+  const startPlaidConnect = async () => {
     setError(null);
     setConnecting(true);
     try {
-      await openTellerConnect({
-        applicationId: TELLER_APP_ID,
-        environment: TELLER_ENV,
-        onSuccess: async (enrollment: TellerEnrollment) => {
-          try {
-            await callFn("teller-exchange", {
-              method: "POST",
-              body: JSON.stringify({
-                accessToken: enrollment.accessToken,
-                enrollment: enrollment.enrollment,
-              }),
-            });
-            qc.invalidateQueries({ queryKey: ["accounts"] });
-          } catch (e) {
-            setError((e as Error).message);
-          } finally {
-            setConnecting(false);
-          }
-        },
-        onExit: () => setConnecting(false),
-        onFailure: (f) => {
-          setError(typeof f === "string" ? f : "Teller Connect failed");
-          setConnecting(false);
-        },
+      const { linkToken } = await callFn<{ linkToken: string }>("plaid-link-token", {
+        method: "POST",
       });
+      const result = await openPlaidLink(linkToken);
+      if (!result.publicToken) return;
+      await callFn("plaid-exchange", {
+        method: "POST",
+        body: JSON.stringify({
+          publicToken: result.publicToken,
+          institution: result.institution,
+        }),
+      });
+      await qc.invalidateQueries({ queryKey: ["accounts"] });
     } catch (e) {
       setError((e as Error).message);
+    } finally {
       setConnecting(false);
     }
   };
@@ -83,7 +69,7 @@ function AccountsPage() {
   const disconnect = async (id: string) => {
     if (!confirm("Disconnect this bank? Stored balances and links will be removed.")) return;
     try {
-      await callFn("teller-disconnect", {
+      await callFn("plaid-disconnect", {
         method: "POST",
         body: JSON.stringify({ accountId: id }),
       });
@@ -112,18 +98,18 @@ function AccountsPage() {
             <Landmark className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <p className="font-display text-base font-bold text-foreground">Connect with Teller</p>
+            <p className="font-display text-base font-bold text-foreground">Connect with Plaid</p>
             <p className="text-xs text-muted-foreground">
               Sandbox mode — link a test bank to import balances and transactions.
             </p>
           </div>
         </div>
         <button
-          onClick={startTellerConnect}
+          onClick={startPlaidConnect}
           disabled={connecting}
           className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground disabled:opacity-60"
         >
-          <Plus className="h-4 w-4" /> {connecting ? "Opening Teller…" : "Connect a bank"}
+          <Plus className="h-4 w-4" /> {connecting ? "Opening Plaid…" : "Connect a bank"}
         </button>
         {error && (
           <p className="mt-3 rounded-xl bg-destructive/10 px-3 py-2 text-xs text-destructive">
@@ -220,8 +206,8 @@ function AccountsPage() {
       </section>
 
       <p className="mx-5 mt-8 rounded-2xl border border-border bg-surface/40 p-4 text-[11px] leading-relaxed text-muted-foreground">
-        Teller access tokens are stored on the server. Sandbox/dev mode — production access
-        and at-rest encryption (pgsodium/KMS) ship before launch.
+        Plaid access tokens stay on the server and are never returned to the app. Sandbox mode
+        uses Plaid test institutions and credentials.
       </p>
 
       <div className="h-10" />
@@ -229,7 +215,7 @@ function AccountsPage() {
   );
 }
 
-type TellerTxn = {
+type PlaidTxn = {
   id: string;
   date: string;
   description: string;
@@ -239,10 +225,10 @@ type TellerTxn = {
 
 function TransactionList({ accountId }: { accountId: string }) {
   const { data, isLoading, error } = useQuery({
-    queryKey: ["teller-txns", accountId],
+    queryKey: ["plaid-txns", accountId],
     queryFn: async () => {
-      return await callFn<{ transactions: TellerTxn[] }>(
-        `teller-transactions?account_id=${accountId}&limit=10`,
+      return await callFn<{ transactions: PlaidTxn[] }>(
+        `plaid-transactions?account_id=${accountId}&limit=10`,
       );
     },
   });

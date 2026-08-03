@@ -2,7 +2,11 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+import {
+  authRedirectUrl,
+  startOAuth,
+  subscribeToMobileAuthCallbacks,
+} from "@/lib/kyte/mobileAuth";
 import { KyteMark } from "./index";
 import { Apple } from "lucide-react";
 
@@ -52,6 +56,26 @@ function Login() {
     };
   }, [navigate]);
 
+  useEffect(() => {
+    let active = true;
+    let unsubscribe: (() => void) | undefined;
+    void subscribeToMobileAuthCallbacks(({ session, error: callbackError }) => {
+      if (!active) return;
+      if (callbackError) {
+        setError(callbackError.message);
+      } else if (session) {
+        navigate({ to: "/app/home", replace: true });
+      }
+    }).then((remove) => {
+      if (active) unsubscribe = remove;
+      else remove();
+    });
+    return () => {
+      active = false;
+      unsubscribe?.();
+    };
+  }, [navigate]);
+
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitting(true);
@@ -78,7 +102,7 @@ function Login() {
         const { data, error } = await supabase.auth.signUp({
           email: parsed.data.email,
           password: parsed.data.password,
-          options: { emailRedirectTo: window.location.origin },
+          options: { emailRedirectTo: authRedirectUrl() },
         });
         if (error) throw error;
         mobileTimingLog("login.submit.signup.done", { hasSession: Boolean(data.session) });
@@ -99,10 +123,11 @@ function Login() {
 
   const oauth = async (provider: "google" | "apple") => {
     setError(null);
-    const res = await lovable.auth.signInWithOAuth(provider, {
-      redirect_uri: window.location.origin,
-    });
-    if (res.error) setError(res.error.message ?? "Sign-in failed");
+    try {
+      await startOAuth(provider);
+    } catch (oauthError) {
+      setError(oauthError instanceof Error ? oauthError.message : "Sign-in failed");
+    }
   };
 
   return (

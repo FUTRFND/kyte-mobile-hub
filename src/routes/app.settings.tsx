@@ -333,7 +333,7 @@ function SettingsPage() {
           className="flex w-full items-center gap-3 px-5 py-4 text-left active:bg-surface/50"
         >
           <Landmark className="h-4 w-4 text-primary" />
-          <span className="flex-1 text-sm font-semibold text-foreground">Manage banks (Teller)</span>
+          <span className="flex-1 text-sm font-semibold text-foreground">Manage banks (Plaid)</span>
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
         </Link>
       </Section>
@@ -523,7 +523,7 @@ function DemoSeeder() {
     <div className="px-5 py-4">
       <p className="text-xs text-muted-foreground">
         Populate realistic bills, income, and transactions so every screen looks alive. Your linked
-        Teller accounts stay untouched.
+        Plaid-linked accounts stay untouched.
       </p>
       <button
         onClick={run}

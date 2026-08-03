@@ -9,14 +9,18 @@
 // (com.kytepayments.app://auth/callback). Email verification links use the
 // same scheme so tapping "Verify Email" reopens the app and completes sign-in.
 import "./styles.css";
-import { App as CapacitorApp } from "@capacitor/app";
-import { Browser } from "@capacitor/browser";
+import {
+  authRedirectUrl,
+  startOAuth,
+  subscribeToMobileAuthCallbacks,
+} from "./lib/kyte/mobileAuth";
 
 const rootEl = document.getElementById("root");
 const MOBILE_DEBUG = import.meta.env.DEV;
-const AUTH_REDIRECT = "com.kytepayments.app://auth/callback";
+let fullAppMountPromise: Promise<void> | null = null;
+let pendingAuthError = "";
 
-function log(label: string, data?: unknown) {
+function mobileTimingLog(label: string, data?: unknown) {
   if (!MOBILE_DEBUG) return;
   console.info(`[mobile:${Math.round(performance.now())}ms] ${label}`, data ?? "");
 }
@@ -27,7 +31,7 @@ function escapeHtml(value: string) {
 
 function renderPlainLogin() {
   if (!rootEl) throw new Error("#root element missing from index.html");
-  log("plain-login.render");
+  mobileTimingLog("plain-login.render");
   rootEl.innerHTML = `
     <main class="relative flex min-h-screen flex-col overflow-y-auto overflow-x-hidden bg-background px-6 safe-top safe-bottom">
       <div class="relative flex flex-1 flex-col justify-center">
@@ -73,6 +77,7 @@ function renderPlainLogin() {
     </main>`;
 
   wirePlainLogin();
+  if (pendingAuthError) setText("kyte-auth-error", pendingAuthError);
 }
 
 function setText(id: string, value: string) {
@@ -130,14 +135,10 @@ function wirePlainLogin() {
 
     setSubmitting(true, mode);
     try {
-      log("plain-login.submit", { mode });
+      mobileTimingLog("plain-login.submit", { mode });
       const { supabase } = await import("./integrations/supabase/client");
       const result = mode === "signup"
-        ? await supabase.auth.signUp({
-            email: email.trim(),
-            password,
-            options: { emailRedirectTo: AUTH_REDIRECT },
-          })
+        ? await supabase.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: authRedirectUrl() } })
         : await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (result.error) throw result.error;
       if (result.data.session) await mountFullApp("/app/home");
@@ -152,21 +153,10 @@ function wirePlainLogin() {
   const nativeOAuth = async (provider: "google" | "apple") => {
     setText("kyte-auth-error", "");
     try {
-      log("oauth.start", { provider });
-      const { supabase } = await import("./integrations/supabase/client");
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: AUTH_REDIRECT,
-          skipBrowserRedirect: true,
-        },
-      });
-      if (error) throw error;
-      if (!data?.url) throw new Error("Sign-in URL missing");
-      log("oauth.open", { url: data.url });
-      await Browser.open({ url: data.url, presentationStyle: "popover" });
+      mobileTimingLog("plain-login.oauth.start", { provider });
+      await startOAuth(provider);
     } catch (err) {
-      log("oauth.failed", err);
+      mobileTimingLog("oauth.failed", err);
       setText("kyte-auth-error", err instanceof Error ? err.message : "Sign-in failed");
     }
   };
@@ -175,77 +165,18 @@ function wirePlainLogin() {
   appleButton?.addEventListener("click", () => void nativeOAuth("apple"));
 }
 
-/**
- * Deep-link handler.
- *
- * Fires when the OS reopens the app via com.kytepayments.app:// (OAuth callback,
- * verification email). Parses either a PKCE ?code=... or a token fragment
- * (#access_token=...&refresh_token=...), completes the Supabase session,
- * closes the in-app browser, and mounts the full app.
- */
-async function handleAuthDeepLink(rawUrl: string) {
-  log("deeplink.received", { rawUrl });
-  try {
-    const url = new URL(rawUrl);
-    if (!/auth\/callback/.test(url.pathname) && !/auth\/callback/.test(url.host + url.pathname)) {
-      log("deeplink.ignored", { rawUrl });
-      return;
-    }
-    const { supabase } = await import("./integrations/supabase/client");
-
-    const errorDescription = url.searchParams.get("error_description") ?? url.searchParams.get("error");
-    if (errorDescription) {
-      log("deeplink.error", { errorDescription });
-      setText("kyte-auth-error", errorDescription);
-      try { await Browser.close(); } catch {}
-      return;
-    }
-
-    // PKCE / email verification: ?code=...
-    const code = url.searchParams.get("code");
-    if (code) {
-      log("deeplink.exchangeCode");
-      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-      if (error) throw error;
-      try { await Browser.close(); } catch {}
-      if (data.session) await mountFullApp("/app/home");
-      return;
-    }
-
-    // Implicit grant: #access_token=...&refresh_token=...
-    const hash = url.hash.startsWith("#") ? url.hash.slice(1) : url.hash;
-    if (hash) {
-      const params = new URLSearchParams(hash);
-      const access_token = params.get("access_token");
-      const refresh_token = params.get("refresh_token");
-      if (access_token && refresh_token) {
-        log("deeplink.setSession");
-        const { error } = await supabase.auth.setSession({ access_token, refresh_token });
-        if (error) throw error;
-        try { await Browser.close(); } catch {}
-        await mountFullApp("/app/home");
-        return;
-      }
-    }
-
-    // Fallback: verified email but no tokens — try existing session.
-    const { data } = await supabase.auth.getSession();
-    try { await Browser.close(); } catch {}
-    if (data.session) await mountFullApp("/app/home");
-    else setText("kyte-auth-error", "Signed in on another device. Please sign in here.");
-  } catch (err) {
-    log("deeplink.failed", err);
-    try { await Browser.close(); } catch {}
-    setText("kyte-auth-error", err instanceof Error ? err.message : "Sign-in failed");
-  }
+async function mountFullApp(target = "/app/home") {
+  if (fullAppMountPromise) return fullAppMountPromise;
+  fullAppMountPromise = mountFullAppOnce(target);
+  return fullAppMountPromise;
 }
 
-async function mountFullApp(target = "/app/home") {
+async function mountFullAppOnce(target: string) {
   if (!rootEl) throw new Error("#root element missing from index.html");
   if (window.location.hash !== `#${target}`) {
     window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}#${target}`);
   }
-  log("full-app.mount.start", { target });
+  mobileTimingLog("full-app.mount.start", { target });
 
   const [{ createRoot }, { QueryClient, QueryClientProvider }, { RouterProvider, createHashHistory, createRouter }, { routeTree }] = await Promise.all([
     import("react-dom/client"),
@@ -271,27 +202,32 @@ async function mountFullApp(target = "/app/home") {
       <RouterProvider router={router} />
     </QueryClientProvider>,
   );
-  log("full-app.mount.done");
+  mobileTimingLog("full-app.mount.done");
 }
 
 async function boot() {
   if (!rootEl) throw new Error("#root element missing from index.html");
-  log("boot.start");
-
-  // Register the deep-link listener BEFORE any auth call, so an OAuth
-  // callback delivered while boot is still running is not missed.
-  try {
-    await CapacitorApp.addListener("appUrlOpen", (event) => {
-      void handleAuthDeepLink(event.url);
-    });
-  } catch (err) {
-    log("boot.deeplink.register.failed", err);
-  }
-
+  mobileTimingLog("boot.start");
+  let unsubscribe: (() => void) | undefined;
+  unsubscribe = await subscribeToMobileAuthCallbacks(async ({ session, error }) => {
+    mobileTimingLog("auth.callback.done", { hasSession: Boolean(session), hasError: Boolean(error) });
+    if (error) {
+      pendingAuthError = error.message;
+      setText("kyte-auth-error", error.message);
+      return;
+    }
+    if (session) {
+      unsubscribe?.();
+      await mountFullApp("/app/home");
+    }
+  });
   const { supabase } = await import("./integrations/supabase/client");
   const { data } = await supabase.auth.getSession();
-  log("boot.session.done", { hasSession: Boolean(data.session) });
-  if (data.session) await mountFullApp("/app/home");
+  mobileTimingLog("boot.session.done", { hasSession: Boolean(data.session) });
+  if (data.session) {
+    unsubscribe();
+    await mountFullApp("/app/home");
+  }
   else renderPlainLogin();
 }
 

@@ -23,7 +23,7 @@ function AccountsPreviewPage() {
             <Landmark className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <p className="font-display text-base font-bold text-foreground">Connect with Teller</p>
+            <p className="font-display text-base font-bold text-foreground">Connect with Plaid</p>
             <p className="text-xs text-muted-foreground">Link a bank or credit card to import balances and statements automatically.</p>
           </div>
         </div>
@@ -53,7 +53,7 @@ function AccountsPreviewPage() {
       </section>
 
       <p className="mx-5 mt-8 rounded-2xl border border-border bg-surface/40 p-4 text-[11px] leading-relaxed text-muted-foreground">
-        Teller access keys are still pending; this preview shows the linked-accounts skeleton and account list state.
+        Plaid sandbox credentials are configured on the server; this preview shows the linked-accounts skeleton and account list state.
       </p>
     </div>
   );
