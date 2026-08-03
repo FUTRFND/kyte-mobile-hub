@@ -114,7 +114,7 @@ function BillDetail() {
       if (!ok) return;
     }
     alert(
-      `Pay Now\n\n${bill.name} — ${formatMoney(Number(bill.amount), currency)}\n\nWhen you connect a Teller account, this opens the issuer's payment link. For now you can log it with “Mark as paid”.`,
+      `Pay Now\n\n${bill.name} — ${formatMoney(Number(bill.amount), currency)}\n\nWhen you connect a Plaid account, this opens the issuer's payment link. For now you can log it with “Mark as paid”.`,
     );
   };
 

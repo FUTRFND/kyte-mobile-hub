@@ -5,9 +5,16 @@
 // invalidation can run while the user is typing credentials. After a valid
 // session exists, the full Kyte React app mounts normally.
 import "./styles.css";
+import {
+  authRedirectUrl,
+  startOAuth,
+  subscribeToMobileAuthCallbacks,
+} from "./lib/kyte/mobileAuth";
 
 const rootEl = document.getElementById("root");
 const MOBILE_DEBUG = import.meta.env.DEV;
+let fullAppMountPromise: Promise<void> | null = null;
+let pendingAuthError = "";
 
 function mobileTimingLog(label: string, data?: unknown) {
   if (!MOBILE_DEBUG) return;
@@ -66,6 +73,7 @@ function renderPlainLogin() {
     </main>`;
 
   wirePlainLogin();
+  if (pendingAuthError) setText("kyte-auth-error", pendingAuthError);
 }
 
 function setText(id: string, value: string) {
@@ -126,7 +134,7 @@ function wirePlainLogin() {
       mobileTimingLog("plain-login.submit", { mode });
       const { supabase } = await import("./integrations/supabase/client");
       const result = mode === "signup"
-        ? await supabase.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: window.location.origin } })
+        ? await supabase.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: authRedirectUrl() } })
         : await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (result.error) throw result.error;
       if (result.data.session) await mountFullApp("/app/home");
@@ -141,9 +149,8 @@ function wirePlainLogin() {
   const oauth = async (provider: "google" | "apple") => {
     setText("kyte-auth-error", "");
     try {
-      const { lovable } = await import("./integrations/lovable/index");
-      const res = await lovable.auth.signInWithOAuth(provider, { redirect_uri: window.location.origin });
-      if (res.error) setText("kyte-auth-error", res.error.message ?? "Sign-in failed");
+      mobileTimingLog("plain-login.oauth.start", { provider });
+      await startOAuth(provider);
     } catch (err) {
       setText("kyte-auth-error", err instanceof Error ? err.message : "Sign-in failed");
     }
@@ -154,6 +161,12 @@ function wirePlainLogin() {
 }
 
 async function mountFullApp(target = "/app/home") {
+  if (fullAppMountPromise) return fullAppMountPromise;
+  fullAppMountPromise = mountFullAppOnce(target);
+  return fullAppMountPromise;
+}
+
+async function mountFullAppOnce(target: string) {
   if (!rootEl) throw new Error("#root element missing from index.html");
   if (window.location.hash !== `#${target}`) {
     window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}#${target}`);
@@ -190,10 +203,26 @@ async function mountFullApp(target = "/app/home") {
 async function boot() {
   if (!rootEl) throw new Error("#root element missing from index.html");
   mobileTimingLog("boot.start");
+  let unsubscribe: (() => void) | undefined;
+  unsubscribe = await subscribeToMobileAuthCallbacks(async ({ session, error }) => {
+    mobileTimingLog("auth.callback.done", { hasSession: Boolean(session), hasError: Boolean(error) });
+    if (error) {
+      pendingAuthError = error.message;
+      setText("kyte-auth-error", error.message);
+      return;
+    }
+    if (session) {
+      unsubscribe?.();
+      await mountFullApp("/app/home");
+    }
+  });
   const { supabase } = await import("./integrations/supabase/client");
   const { data } = await supabase.auth.getSession();
   mobileTimingLog("boot.session.done", { hasSession: Boolean(data.session) });
-  if (data.session) await mountFullApp("/app/home");
+  if (data.session) {
+    unsubscribe();
+    await mountFullApp("/app/home");
+  }
   else renderPlainLogin();
 }
 

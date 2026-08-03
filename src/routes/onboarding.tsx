@@ -23,7 +23,7 @@ const slides = [
   {
     icon: ShieldCheck,
     title: "Bank-grade security.",
-    body: "Read-only links via Teller. Tokens encrypted, never on device.",
+    body: "Read-only links via Plaid. Access tokens never live on your device.",
     accent: "from-[hsl(150_70%_50%)] to-[hsl(190_100%_65%)]",
   },
 ];
