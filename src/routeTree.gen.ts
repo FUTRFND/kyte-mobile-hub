@@ -22,6 +22,7 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as AccountsRouteImport } from './routes/accounts'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BillIdRouteImport } from './routes/bill.$id'
+import { Route as AuthNativeRouteImport } from './routes/auth.native'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppInsightsRouteImport } from './routes/app.insights'
@@ -97,6 +98,11 @@ const BillIdRoute = BillIdRouteImport.update({
   path: '/bill/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthNativeRoute = AuthNativeRouteImport.update({
+  id: '/auth/native',
+  path: '/auth/native',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -164,6 +170,7 @@ export interface FileRoutesByFullPath {
   '/app/insights': typeof AppInsightsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/settings': typeof AppSettingsRoute
+  '/auth/native': typeof AuthNativeRoute
   '/bill/$id': typeof BillIdRoute
   '/app/bill/$id': typeof AppBillIdRoute
 }
@@ -188,6 +195,7 @@ export interface FileRoutesByTo {
   '/app/insights': typeof AppInsightsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/settings': typeof AppSettingsRoute
+  '/auth/native': typeof AuthNativeRoute
   '/bill/$id': typeof BillIdRoute
   '/app/bill/$id': typeof AppBillIdRoute
 }
@@ -213,6 +221,7 @@ export interface FileRoutesById {
   '/app/insights': typeof AppInsightsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/settings': typeof AppSettingsRoute
+  '/auth/native': typeof AuthNativeRoute
   '/bill/$id': typeof BillIdRoute
   '/app/bill/$id': typeof AppBillIdRoute
 }
@@ -239,6 +248,7 @@ export interface FileRouteTypes {
     | '/app/insights'
     | '/app/profile'
     | '/app/settings'
+    | '/auth/native'
     | '/bill/$id'
     | '/app/bill/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -263,6 +273,7 @@ export interface FileRouteTypes {
     | '/app/insights'
     | '/app/profile'
     | '/app/settings'
+    | '/auth/native'
     | '/bill/$id'
     | '/app/bill/$id'
   id:
@@ -287,6 +298,7 @@ export interface FileRouteTypes {
     | '/app/insights'
     | '/app/profile'
     | '/app/settings'
+    | '/auth/native'
     | '/bill/$id'
     | '/app/bill/$id'
   fileRoutesById: FileRoutesById
@@ -304,6 +316,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   ProfileRoute: typeof ProfileRoute
   SettingsRoute: typeof SettingsRoute
+  AuthNativeRoute: typeof AuthNativeRoute
   BillIdRoute: typeof BillIdRoute
 }
 
@@ -398,6 +411,13 @@ declare module '@tanstack/react-router' {
       path: '/bill/$id'
       fullPath: '/bill/$id'
       preLoaderRoute: typeof BillIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/native': {
+      id: '/auth/native'
+      path: '/auth/native'
+      fullPath: '/auth/native'
+      preLoaderRoute: typeof AuthNativeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/settings': {
@@ -505,6 +525,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   ProfileRoute: ProfileRoute,
   SettingsRoute: SettingsRoute,
+  AuthNativeRoute: AuthNativeRoute,
   BillIdRoute: BillIdRoute,
 }
 export const routeTree = rootRouteImport
