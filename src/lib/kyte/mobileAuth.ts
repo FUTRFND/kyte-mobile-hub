@@ -143,7 +143,8 @@ export async function startOAuth(provider: OAuthProvider) {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: KYTE_OAUTH_CALLBACK,
+      // Must be the https bridge: Cloud rejects custom-scheme redirects.
+      redirectTo: KYTE_AUTH_BRIDGE_URL,
       skipBrowserRedirect: true,
     },
   });
