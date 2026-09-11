@@ -9,7 +9,7 @@ import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 // Configuration
-const SITE_NAME = "Kyte Mobile Hub"
+const SITE_NAME = "Kyte"
 const SENDER_DOMAIN = "notify.kytepayment.com"
 const ROOT_DOMAIN = "kytepayment.com"
 const FROM_DOMAIN = "notify.kytepayment.com"
@@ -32,8 +32,6 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
               render: (data) =>
                 React.createElement(SignupEmail, {
                   siteName: SITE_NAME,
-                  siteUrl: SITE_URL,
-                  recipient: data.email,
                   confirmationUrl: data.url,
                 }),
             },

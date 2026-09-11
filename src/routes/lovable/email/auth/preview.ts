@@ -18,7 +18,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "Kyte Mobile Hub"
+const SITE_NAME = "Kyte"
 const ROOT_DOMAIN = "kytepayment.com"
 
 // Sample data for preview mode ONLY (not used in actual email sending).
@@ -31,8 +31,6 @@ const SAMPLE_EMAIL = "user@example.test"
 const SAMPLE_DATA: Record<string, object> = {
   signup: {
     siteName: SITE_NAME,
-    siteUrl: SAMPLE_PROJECT_URL,
-    recipient: SAMPLE_EMAIL,
     confirmationUrl: SAMPLE_PROJECT_URL,
   },
   magiclink: {
