@@ -26,7 +26,7 @@ const ROOT_DOMAIN = "kytepayment.com"
 // The sample email uses a fixed placeholder (RFC 6761 .test TLD) so the Go backend
 // can always find-and-replace it with the actual recipient when sending test emails,
 // even if the project's domain has changed since the template was scaffolded.
-const SAMPLE_PROJECT_URL = "https://bright-sky-app-78.lovable.app"
+const SAMPLE_PROJECT_URL = "https://kytepayment.com"
 const SAMPLE_EMAIL = "user@example.test"
 const SAMPLE_DATA: Record<string, object> = {
   signup: {
