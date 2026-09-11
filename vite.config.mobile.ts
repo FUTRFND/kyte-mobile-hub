@@ -11,6 +11,7 @@ import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import path from "node:path";
 
 export default defineConfig({
+  root: path.resolve(__dirname, "mobile"),
   plugins: [
     TanStackRouterVite({
       target: "react",
@@ -34,8 +35,5 @@ export default defineConfig({
     target: "es2020",
     modulePreload: { polyfill: false },
     sourcemap: false,
-    rollupOptions: {
-      input: path.resolve(__dirname, "index.html"),
-    },
   },
 });
