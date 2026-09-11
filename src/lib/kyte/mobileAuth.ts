@@ -7,7 +7,7 @@ export const KYTE_OAUTH_CALLBACK = "com.kytepayments.app://auth/callback";
 // Supabase (Lovable Cloud) only allows https redirects, so native auth is sent
 // to this https bridge, which immediately re-emits the params onto
 // KYTE_OAUTH_CALLBACK. See src/routes/auth.native.tsx.
-export const KYTE_AUTH_BRIDGE_URL = "https://bright-sky-app-78.lovable.app/auth/native";
+export const KYTE_AUTH_BRIDGE_URL = "https://kytepayment.com/auth/native";
 
 type OAuthProvider = "google" | "apple";
 type CallbackResult = { session: Session | null; error: Error | null };
