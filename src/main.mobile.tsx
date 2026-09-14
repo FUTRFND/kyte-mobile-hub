@@ -145,6 +145,32 @@ function wirePlainLogin() {
     }
   });
 
+  const wireOAuth = (id: string, provider: "google" | "apple") => {
+    const button = document.getElementById(id) as HTMLButtonElement | null;
+    button?.addEventListener("click", async () => {
+      setText("kyte-auth-error", "");
+      button.disabled = true;
+      const original = button.textContent;
+      button.textContent = "Opening…";
+      try {
+        const { startOAuth } = await import("./lib/kyte/mobileAuth");
+        await startOAuth(provider);
+      } catch (err) {
+        const raw = err instanceof Error ? err.message : "Sign-in failed";
+        setText(
+          "kyte-auth-error",
+          /missing oauth secret|unsupported provider/i.test(raw)
+            ? `${provider === "google" ? "Google" : "Apple"} sign-in isn't finished setting up yet. Use email sign-in for now.`
+            : raw,
+        );
+      } finally {
+        button.disabled = false;
+        button.textContent = original;
+      }
+    });
+  };
+  wireOAuth("kyte-oauth-google", "google");
+  wireOAuth("kyte-oauth-apple", "apple");
 }
 
 async function mountFullApp(target = "/app/home") {
