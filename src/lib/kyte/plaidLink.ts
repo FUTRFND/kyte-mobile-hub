@@ -43,7 +43,13 @@ function loadWebSdk(): Promise<void> {
 }
 
 export async function openPlaidLink(token: string): Promise<PlaidLinkResult> {
-  if (Capacitor.isNativePlatform()) return NativePlaidLink.open({ token });
+  // Only use the native Plaid Link plugin when it is actually compiled into the
+  // iOS/Android shell. Otherwise Capacitor throws "not implemented" and the
+  // Connect a bank button dead-ends, so fall back to Plaid's web Link, which
+  // runs inside the WebView.
+  if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable("PlaidLink")) {
+    return NativePlaidLink.open({ token });
+  }
   await loadWebSdk();
   if (!window.Plaid) throw new Error("Plaid Link is unavailable");
   return new Promise((resolve, reject) => {
