@@ -57,6 +57,16 @@ function renderPlainLogin() {
           <button id="kyte-submit" type="submit" class="mt-2 h-14 w-full rounded-xl bg-primary text-base font-semibold text-primary-foreground active:opacity-90 disabled:opacity-60">Sign in</button>
         </form>
 
+        <div class="mt-6 flex items-center gap-3">
+          <span class="h-px flex-1 bg-border"></span>
+          <span class="text-xs text-muted-foreground">or</span>
+          <span class="h-px flex-1 bg-border"></span>
+        </div>
+        <div class="mt-4 flex flex-col gap-3">
+          <button id="kyte-oauth-google" type="button" class="h-12 w-full rounded-xl border border-input bg-surface text-sm font-semibold text-foreground active:opacity-90">Continue with Google</button>
+          <button id="kyte-oauth-apple" type="button" class="h-12 w-full rounded-xl border border-input bg-surface text-sm font-semibold text-foreground active:opacity-90">Continue with Apple</button>
+        </div>
+
         <p class="mt-6 text-center text-sm text-muted-foreground">
           New to Kyte? <button id="kyte-mode" type="button" class="font-semibold text-primary">Create account</button>
         </p>
