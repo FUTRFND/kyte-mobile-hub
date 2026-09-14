@@ -57,6 +57,16 @@ function renderPlainLogin() {
           <button id="kyte-submit" type="submit" class="mt-2 h-14 w-full rounded-xl bg-primary text-base font-semibold text-primary-foreground active:opacity-90 disabled:opacity-60">Sign in</button>
         </form>
 
+        <div class="mt-6 flex items-center gap-3">
+          <span class="h-px flex-1 bg-border"></span>
+          <span class="text-xs text-muted-foreground">or</span>
+          <span class="h-px flex-1 bg-border"></span>
+        </div>
+        <div class="mt-4 flex flex-col gap-3">
+          <button id="kyte-oauth-google" type="button" class="h-12 w-full rounded-xl border border-input bg-surface text-sm font-semibold text-foreground active:opacity-90">Continue with Google</button>
+          <button id="kyte-oauth-apple" type="button" class="h-12 w-full rounded-xl border border-input bg-surface text-sm font-semibold text-foreground active:opacity-90">Continue with Apple</button>
+        </div>
+
         <p class="mt-6 text-center text-sm text-muted-foreground">
           New to Kyte? <button id="kyte-mode" type="button" class="font-semibold text-primary">Create account</button>
         </p>
@@ -135,6 +145,32 @@ function wirePlainLogin() {
     }
   });
 
+  const wireOAuth = (id: string, provider: "google" | "apple") => {
+    const button = document.getElementById(id) as HTMLButtonElement | null;
+    button?.addEventListener("click", async () => {
+      setText("kyte-auth-error", "");
+      button.disabled = true;
+      const original = button.textContent;
+      button.textContent = "Opening…";
+      try {
+        const { startOAuth } = await import("./lib/kyte/mobileAuth");
+        await startOAuth(provider);
+      } catch (err) {
+        const raw = err instanceof Error ? err.message : "Sign-in failed";
+        setText(
+          "kyte-auth-error",
+          /missing oauth secret|unsupported provider/i.test(raw)
+            ? `${provider === "google" ? "Google" : "Apple"} sign-in isn't finished setting up yet. Use email sign-in for now.`
+            : raw,
+        );
+      } finally {
+        button.disabled = false;
+        button.textContent = original;
+      }
+    });
+  };
+  wireOAuth("kyte-oauth-google", "google");
+  wireOAuth("kyte-oauth-apple", "apple");
 }
 
 async function mountFullApp(target = "/app/home") {
