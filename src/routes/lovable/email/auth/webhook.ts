@@ -11,7 +11,7 @@ import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 // Configuration
 const SITE_NAME = "Kyte"
 const SENDER_DOMAIN = "notify.kytepayment.com"
-const ROOT_DOMAIN = "kytepayment.com"
+const ROOT_DOMAIN = "app.kytepayment.com"
 const FROM_DOMAIN = "notify.kytepayment.com"
 const SITE_URL = `https://${ROOT_DOMAIN}`
 
