@@ -10,8 +10,23 @@ import tailwindcss from "@tailwindcss/vite";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import path from "node:path";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  // The Vite root is mobile/, but the .env with the Supabase values lives at the
+  // repository root, so envDir must point back there. Without this the packaged
+  // bundle ships with no VITE_SUPABASE_* values and the app dies at launch with
+  // "Missing Supabase environment variable(s)".
+  const env = loadEnv(mode, path.resolve(__dirname), "");
+  const supabaseUrl = env.VITE_SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
+  const supabaseKey = env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error(
+      "Mobile build aborted: VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY must be present in the repository-root .env before running build:mobile.",
+    );
+  }
+
+  return {
   root: path.resolve(__dirname, "mobile"),
+  envDir: path.resolve(__dirname),
   plugins: [
     TanStackRouterVite({
       target: "react",
