@@ -4,7 +4,7 @@
 // This is the FULL Kyte application — same routes and providers as the
 // TanStack Start preview, mounted via src/main.mobile.tsx in CSR mode
 // (no SSR, no server functions).
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
@@ -43,6 +43,10 @@ export default defineConfig(({ mode }) => {
   },
   define: {
     "import.meta.env.VITE_KYTE_MOBILE": JSON.stringify("1"),
+    // Explicit fallbacks so the packaged bundle always carries the backend
+    // values even if envDir resolution changes on another machine.
+    "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(supabaseUrl),
+    "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(supabaseKey),
   },
   build: {
     outDir: path.resolve(__dirname, "dist"),
@@ -51,4 +55,5 @@ export default defineConfig(({ mode }) => {
     modulePreload: { polyfill: false },
     sourcemap: false,
   },
+  };
 });
