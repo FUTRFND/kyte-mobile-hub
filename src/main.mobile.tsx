@@ -235,6 +235,11 @@ async function boot() {
       return;
     }
     if (session) {
+      if (await rejectUnverifiedSession(session)) {
+        pendingAuthError = UNVERIFIED_EMAIL_MESSAGE;
+        setText("kyte-auth-error", UNVERIFIED_EMAIL_MESSAGE);
+        return;
+      }
       unsubscribe?.();
       await mountFullApp("/app/home");
     }
@@ -242,11 +247,13 @@ async function boot() {
   const { supabase } = await import("./integrations/supabase/client");
   const { data } = await supabase.auth.getSession();
   mobileTimingLog("boot.session.done", { hasSession: Boolean(data.session) });
-  if (data.session) {
+  if (data.session && isSessionVerified(data.session)) {
     unsubscribe();
     await mountFullApp("/app/home");
+  } else {
+    if (data.session) await rejectUnverifiedSession(data.session);
+    renderPlainLogin();
   }
-  else renderPlainLogin();
 }
 
 boot().catch((err) => {
