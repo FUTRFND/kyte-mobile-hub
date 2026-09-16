@@ -4,6 +4,7 @@ import { Home, CalendarDays, BarChart3, User2, type LucideIcon } from "lucide-re
 import { supabase } from "@/integrations/supabase/client";
 import { BiometricGate } from "@/components/kyte/BiometricGate";
 import { installOfflineQueue } from "@/lib/kyte/offlineQueue";
+import { isSessionVerified, rejectUnverifiedSession } from "@/lib/kyte/mobileAuth";
 
 export const Route = createFileRoute("/app")({
   component: AppShell,
