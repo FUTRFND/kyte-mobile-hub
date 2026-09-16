@@ -69,6 +69,9 @@ function Login() {
       if (!active) return;
       if (callbackError) {
         setError(callbackError.message);
+      } else if (session && !isSessionVerified(session)) {
+        void rejectUnverifiedSession(session);
+        setError(UNVERIFIED_EMAIL_MESSAGE);
       } else if (session) {
         navigate({ to: "/app/home", replace: true });
       }
@@ -112,12 +115,24 @@ function Login() {
         });
         if (error) throw error;
         mobileTimingLog("login.submit.signup.done", { hasSession: Boolean(data.session) });
-        if (data.session) navigate({ to: "/app/home", replace: true });
+        if (data.session && !isSessionVerified(data.session)) {
+          await rejectUnverifiedSession(data.session);
+          setError(UNVERIFIED_EMAIL_MESSAGE);
+        } else if (data.session) {
+          navigate({ to: "/app/home", replace: true });
+        } else {
+          setError("Check your email to confirm your account, then sign in.");
+        }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
         if (error) throw error;
         mobileTimingLog("login.submit.signin.done", { hasSession: Boolean(data.session) });
-        if (data.session) navigate({ to: "/app/home", replace: true });
+        if (data.session && !isSessionVerified(data.session)) {
+          await rejectUnverifiedSession(data.session);
+          setError(UNVERIFIED_EMAIL_MESSAGE);
+        } else if (data.session) {
+          navigate({ to: "/app/home", replace: true });
+        }
       }
     } catch (e) {
       mobileTimingLog("login.submit.failed", e);
