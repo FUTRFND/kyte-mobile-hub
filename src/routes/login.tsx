@@ -4,7 +4,10 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import {
   authRedirectUrl,
+  isSessionVerified,
+  rejectUnverifiedSession,
   subscribeToMobileAuthCallbacks,
+  UNVERIFIED_EMAIL_MESSAGE,
 } from "@/lib/kyte/mobileAuth";
 import { KyteMark } from "./index";
 
