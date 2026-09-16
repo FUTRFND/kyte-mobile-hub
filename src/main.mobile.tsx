@@ -139,8 +139,15 @@ function wirePlainLogin() {
         ? await supabase.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: authRedirectUrl() } })
         : await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (result.error) throw result.error;
-      if (result.data.session) await mountFullApp("/app/home");
-      else setText("kyte-auth-error", "Check your email to finish creating your account. Tap the link on this device to sign in.");
+      const session = result.data.session;
+      if (session && !isSessionVerified(session)) {
+        await rejectUnverifiedSession(session);
+        setText("kyte-auth-error", UNVERIFIED_EMAIL_MESSAGE);
+      } else if (session) {
+        await mountFullApp("/app/home");
+      } else {
+        setText("kyte-auth-error", "Check your email to finish creating your account. Tap the link on this device to sign in.");
+      }
     } catch (err) {
       setText("kyte-auth-error", err instanceof Error ? err.message : "Authentication failed");
     } finally {
