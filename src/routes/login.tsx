@@ -44,6 +44,11 @@ function Login() {
       .getSession()
       .then(({ data }) => {
         mobileTimingLog("login.session-check.done", { hasSession: Boolean(data.session) });
+        if (data.session && !isSessionVerified(data.session)) {
+          void rejectUnverifiedSession(data.session);
+          setError(UNVERIFIED_EMAIL_MESSAGE);
+          return;
+        }
         const activeField = document.activeElement;
         const userIsEditing = activeField === emailRef.current || activeField === passwordRef.current;
         if (active && data.session && !userIsEditing) navigate({ to: "/app/home", replace: true });
