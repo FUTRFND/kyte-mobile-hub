@@ -10,6 +10,32 @@ export const KYTE_OAUTH_CALLBACK = "com.kytepayments.app://auth/callback";
 export const KYTE_AUTH_BRIDGE_URL = "https://app.kytepayment.com/auth/native";
 
 type OAuthProvider = "google" | "apple";
+
+export const UNVERIFIED_EMAIL_MESSAGE =
+  "Confirm your email first. Check your inbox for the Kyte confirmation link, then sign in.";
+
+/**
+ * Email/password accounts must have a confirmed email before entering the app.
+ * Social identities (Google/Apple) are verified by the provider.
+ */
+export function isSessionVerified(session: Session | null | undefined) {
+  if (!session?.user) return false;
+  const user = session.user;
+  const provider = (user.app_metadata as { provider?: string } | undefined)?.provider;
+  if (provider && provider !== "email") return true;
+  return Boolean(user.email_confirmed_at ?? user.confirmed_at);
+}
+
+/** Ends any session belonging to an unconfirmed email account. */
+export async function rejectUnverifiedSession(session: Session | null | undefined) {
+  if (!session || isSessionVerified(session)) return false;
+  try {
+    await supabase.auth.signOut();
+  } catch {
+    // Ignore: the session is being discarded either way.
+  }
+  return true;
+}
 type CallbackResult = { session: Session | null; error: Error | null };
 type CallbackSubscriber = (result: CallbackResult) => void | Promise<void>;
 
