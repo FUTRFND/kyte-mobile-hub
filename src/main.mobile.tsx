@@ -11,7 +11,10 @@
 import "./styles.css";
 import {
   authRedirectUrl,
+  isSessionVerified,
+  rejectUnverifiedSession,
   subscribeToMobileAuthCallbacks,
+  UNVERIFIED_EMAIL_MESSAGE,
 } from "./lib/kyte/mobileAuth";
 
 const rootEl = document.getElementById("root");
@@ -136,8 +139,15 @@ function wirePlainLogin() {
         ? await supabase.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: authRedirectUrl() } })
         : await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (result.error) throw result.error;
-      if (result.data.session) await mountFullApp("/app/home");
-      else setText("kyte-auth-error", "Check your email to finish creating your account. Tap the link on this device to sign in.");
+      const session = result.data.session;
+      if (session && !isSessionVerified(session)) {
+        await rejectUnverifiedSession(session);
+        setText("kyte-auth-error", UNVERIFIED_EMAIL_MESSAGE);
+      } else if (session) {
+        await mountFullApp("/app/home");
+      } else {
+        setText("kyte-auth-error", "Check your email to finish creating your account. Tap the link on this device to sign in.");
+      }
     } catch (err) {
       setText("kyte-auth-error", err instanceof Error ? err.message : "Authentication failed");
     } finally {
@@ -225,6 +235,11 @@ async function boot() {
       return;
     }
     if (session) {
+      if (await rejectUnverifiedSession(session)) {
+        pendingAuthError = UNVERIFIED_EMAIL_MESSAGE;
+        setText("kyte-auth-error", UNVERIFIED_EMAIL_MESSAGE);
+        return;
+      }
       unsubscribe?.();
       await mountFullApp("/app/home");
     }
@@ -232,11 +247,13 @@ async function boot() {
   const { supabase } = await import("./integrations/supabase/client");
   const { data } = await supabase.auth.getSession();
   mobileTimingLog("boot.session.done", { hasSession: Boolean(data.session) });
-  if (data.session) {
+  if (data.session && isSessionVerified(data.session)) {
     unsubscribe();
     await mountFullApp("/app/home");
+  } else {
+    if (data.session) await rejectUnverifiedSession(data.session);
+    renderPlainLogin();
   }
-  else renderPlainLogin();
 }
 
 boot().catch((err) => {

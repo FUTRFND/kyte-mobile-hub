@@ -4,7 +4,10 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import {
   authRedirectUrl,
+  isSessionVerified,
+  rejectUnverifiedSession,
   subscribeToMobileAuthCallbacks,
+  UNVERIFIED_EMAIL_MESSAGE,
 } from "@/lib/kyte/mobileAuth";
 import { KyteMark } from "./index";
 
@@ -41,6 +44,11 @@ function Login() {
       .getSession()
       .then(({ data }) => {
         mobileTimingLog("login.session-check.done", { hasSession: Boolean(data.session) });
+        if (data.session && !isSessionVerified(data.session)) {
+          void rejectUnverifiedSession(data.session);
+          setError(UNVERIFIED_EMAIL_MESSAGE);
+          return;
+        }
         const activeField = document.activeElement;
         const userIsEditing = activeField === emailRef.current || activeField === passwordRef.current;
         if (active && data.session && !userIsEditing) navigate({ to: "/app/home", replace: true });
@@ -61,6 +69,9 @@ function Login() {
       if (!active) return;
       if (callbackError) {
         setError(callbackError.message);
+      } else if (session && !isSessionVerified(session)) {
+        void rejectUnverifiedSession(session);
+        setError(UNVERIFIED_EMAIL_MESSAGE);
       } else if (session) {
         navigate({ to: "/app/home", replace: true });
       }
@@ -104,12 +115,24 @@ function Login() {
         });
         if (error) throw error;
         mobileTimingLog("login.submit.signup.done", { hasSession: Boolean(data.session) });
-        if (data.session) navigate({ to: "/app/home", replace: true });
+        if (data.session && !isSessionVerified(data.session)) {
+          await rejectUnverifiedSession(data.session);
+          setError(UNVERIFIED_EMAIL_MESSAGE);
+        } else if (data.session) {
+          navigate({ to: "/app/home", replace: true });
+        } else {
+          setError("Check your email to confirm your account, then sign in.");
+        }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
         if (error) throw error;
         mobileTimingLog("login.submit.signin.done", { hasSession: Boolean(data.session) });
-        if (data.session) navigate({ to: "/app/home", replace: true });
+        if (data.session && !isSessionVerified(data.session)) {
+          await rejectUnverifiedSession(data.session);
+          setError(UNVERIFIED_EMAIL_MESSAGE);
+        } else if (data.session) {
+          navigate({ to: "/app/home", replace: true });
+        }
       }
     } catch (e) {
       mobileTimingLog("login.submit.failed", e);
