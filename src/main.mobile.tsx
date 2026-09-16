@@ -11,7 +11,10 @@
 import "./styles.css";
 import {
   authRedirectUrl,
+  isSessionVerified,
+  rejectUnverifiedSession,
   subscribeToMobileAuthCallbacks,
+  UNVERIFIED_EMAIL_MESSAGE,
 } from "./lib/kyte/mobileAuth";
 
 const rootEl = document.getElementById("root");
