@@ -34,6 +34,12 @@ function AppShell() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!active) return;
       if (!sessionHydratedRef.current) return;
+      if (session && !isSessionVerified(session)) {
+        void rejectUnverifiedSession(session);
+        setHasSession(false);
+        setAuthReady(true);
+        return;
+      }
       setHasSession(Boolean(session));
       setAuthReady(true);
     });
@@ -41,7 +47,13 @@ function AppShell() {
     (async () => {
       const sessionCheck = supabase.auth
         .getSession()
-        .then(({ data }) => Boolean(data.session))
+        .then(async ({ data }) => {
+          if (data.session && !isSessionVerified(data.session)) {
+            await rejectUnverifiedSession(data.session);
+            return false;
+          }
+          return Boolean(data.session);
+        })
         .catch((err) => {
           console.warn("[app] session check failed", err);
           return false;
