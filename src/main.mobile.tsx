@@ -22,6 +22,15 @@ const MOBILE_DEBUG = import.meta.env.DEV;
 let fullAppMountPromise: Promise<void> | null = null;
 let pendingAuthError = "";
 
+function renderStartupError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  console.error("[mobile] startup failure", error);
+  if (rootEl) {
+    rootEl.innerHTML = `<main class="flex min-h-screen items-center justify-center bg-background px-6 text-center text-foreground"><div><h1 class="text-xl font-semibold">Kyte failed to start</h1><p class="mt-2 text-sm text-muted-foreground">${escapeHtml(message)}</p><button id="kyte-retry" type="button" class="mt-5 h-12 rounded-xl bg-primary px-5 text-base font-semibold text-primary-foreground">Try again</button></div></main>`;
+    document.getElementById("kyte-retry")?.addEventListener("click", () => window.location.reload());
+  }
+}
+
 function mobileTimingLog(label: string, data?: unknown) {
   if (!MOBILE_DEBUG) return;
   console.info(`[mobile:${Math.round(performance.now())}ms] ${label}`, data ?? "");
@@ -185,7 +194,11 @@ function wirePlainLogin() {
 
 async function mountFullApp(target = "/app/home") {
   if (fullAppMountPromise) return fullAppMountPromise;
-  fullAppMountPromise = mountFullAppOnce(target);
+  fullAppMountPromise = mountFullAppOnce(target).catch((error) => {
+    fullAppMountPromise = null;
+    renderStartupError(error);
+    throw error;
+  });
   return fullAppMountPromise;
 }
 
@@ -241,7 +254,11 @@ async function boot() {
         return;
       }
       unsubscribe?.();
-      await mountFullApp("/app/home");
+      try {
+        await mountFullApp("/app/home");
+      } catch (mountError) {
+        pendingAuthError = mountError instanceof Error ? mountError.message : "The app could not open after sign-in.";
+      }
     }
   });
   const { supabase } = await import("./integrations/supabase/client");
@@ -257,6 +274,5 @@ async function boot() {
 }
 
 boot().catch((err) => {
-  console.error("[boot] fatal", err);
-  if (rootEl) rootEl.innerHTML = `<main class="flex min-h-screen items-center justify-center bg-background px-6 text-center text-foreground"><div><h1 class="text-xl font-semibold">Kyte failed to start</h1><p class="mt-2 text-sm text-muted-foreground">${escapeHtml(err instanceof Error ? err.message : String(err))}</p></div></main>`;
+  renderStartupError(err);
 });

@@ -11,14 +11,6 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: "always",
   },
-  plugins: {
-    Keyboard: {
-      // Native resize only. Do NOT let the plugin scroll, resize the body,
-      // or reposition the WebView — those hooks caused input freezes on iOS.
-      resize: "native",
-      resizeOnFullScreen: false,
-    },
-  },
 };
 
 export default config;

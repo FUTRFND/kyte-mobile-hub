@@ -43,6 +43,13 @@ const subscribers = new Set<CallbackSubscriber>();
 const callbackTasks = new Map<string, Promise<CallbackResult>>();
 let nativeListenerTask: Promise<void> | null = null;
 
+function callbackKey(params: NonNullable<ReturnType<typeof callbackParameters>>) {
+  if (params.code) return `code:${params.code}`;
+  if (params.accessToken) return `token:${params.accessToken}`;
+  if (params.error) return `error:${params.error}`;
+  return "empty";
+}
+
 function isNativeMobile() {
   return import.meta.env.VITE_KYTE_MOBILE === "1" && isNative();
 }
@@ -89,7 +96,11 @@ export async function completeAuthCallback(rawUrl: string): Promise<CallbackResu
   const params = callbackParameters(rawUrl);
   if (!params) return { session: null, error: null };
 
-  const existing = callbackTasks.get(rawUrl);
+  // iOS can deliver the same callback through appUrlOpen and getLaunchUrl with
+  // insignificant URL formatting differences. Deduplicate by the auth payload
+  // so a one-time PKCE code is never exchanged twice.
+  const taskKey = callbackKey(params);
+  const existing = callbackTasks.get(taskKey);
   if (existing) return existing;
 
   const task = (async (): Promise<CallbackResult> => {
@@ -128,7 +139,7 @@ export async function completeAuthCallback(rawUrl: string): Promise<CallbackResu
     }
   })();
 
-  callbackTasks.set(rawUrl, task);
+  callbackTasks.set(taskKey, task);
   return task;
 }
 
@@ -148,6 +159,10 @@ async function installNativeListener() {
   const launch = await App.getLaunchUrl();
   if (launch?.url) await dispatchCallback(launch.url);
 }
+
+// Start listening as soon as the mobile entry imports this module. This keeps
+// a warm iOS resume from arriving before boot() has finished its session read.
+if (isNativeMobile()) nativeListenerTask = installNativeListener();
 
 export async function subscribeToMobileAuthCallbacks(subscriber: CallbackSubscriber) {
   subscribers.add(subscriber);
