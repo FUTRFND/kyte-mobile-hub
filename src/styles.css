@@ -118,6 +118,12 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  /* iOS zooms focused fields below 16px; keeping every form control at the
+     native-safe size also avoids the WebView relayout that caused focus loss. */
+  input, textarea, select {
+    font-size: 16px;
+  }
+
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
     letter-spacing: -0.02em;
